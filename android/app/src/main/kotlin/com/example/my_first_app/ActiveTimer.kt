@@ -11,7 +11,8 @@ data class ActiveTimer(
     val startTimeMillis: Long,
     val durationMinutes: Int,
     val blockedPackages: List<String>,
-    val mode: TimerMode = TimerMode.FOCUS
+    val mode: TimerMode = TimerMode.FOCUS,
+    var pausedUntilMillis: Long? = null
 ) {
     init {
         require(id.isNotBlank()) { "Timer ID must not be blank" }
@@ -34,7 +35,12 @@ data class ActiveTimer(
         return currentTimeMillis >= endTimeMillis
     }
 
+    fun isPaused(currentTimeMillis: Long): Boolean {
+        return pausedUntilMillis != null && currentTimeMillis < pausedUntilMillis!!
+    }
+
     fun isActive(currentTimeMillis: Long): Boolean {
+        if (isPaused(currentTimeMillis)) return false
         return currentTimeMillis in startTimeMillis until endTimeMillis
     }
 }

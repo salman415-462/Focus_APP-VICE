@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../services/method_channel_service.dart';
 import '../services/selected_apps_store.dart';
 
+final RouteObserver<ModalRoute<void>> routeObserver =
+    RouteObserver<ModalRoute<void>>();
+
 class VerticalTimeDial extends StatefulWidget {
   final String label;
   final int value;
@@ -105,7 +108,8 @@ class ScheduleConfigScreen extends StatefulWidget {
   State<ScheduleConfigScreen> createState() => _ScheduleConfigScreenState();
 }
 
-class _ScheduleConfigScreenState extends State<ScheduleConfigScreen> {
+class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
+    with RouteAware {
   ScheduleType _scheduleType = ScheduleType.oneTime;
   TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 17, minute: 0);
@@ -125,6 +129,23 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen> {
   void initState() {
     super.initState();
     _checkSessionStatus();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void didPopNext() {
+    _checkSessionStatus();
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
   }
 
   Future<void> _checkSessionStatus() async {

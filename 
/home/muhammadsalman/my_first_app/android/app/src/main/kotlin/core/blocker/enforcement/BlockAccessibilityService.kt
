@@ -13,8 +13,6 @@ import java.io.IOException
 import java.util.ArrayDeque
 import android.view.accessibility.AccessibilityEvent
 import core.blocker.engine.BlockDecisionEngine
-import core.blocker.engine.BlockRule
-import core.blocker.engine.BlockRuleType
 import core.blocker.engine.Decision
 import core.blocker.engine.TimerMode
 import core.blocker.persistence.BlockRepository
@@ -133,6 +131,7 @@ class BlockAccessibilityService : AccessibilityService() {
     }
 
     private fun evaluateAndEnforce(packageName: String) {
+        Log.d("BYPASS_DEBUG", "evaluateAndEnforce START: $packageName")
         val currentTimeMillis = System.currentTimeMillis()
 
         // Rate-limit repeated enforcement for the same package
@@ -141,58 +140,24 @@ class BlockAccessibilityService : AccessibilityService() {
         }
 
         // Check active timers first (custom duration)
+        Log.d("BYPASS_DEBUG", "checking active timers")
         val activeTimers = repository.getActiveTimers().filter { it.isActive(currentTimeMillis) }
-        val blockingTimer = activeTimers.find { packageName in it.blockedPackages }
+        val isBlockedByTimer = activeTimers.any { packageName in it.blockedPackages }
 
-        // Get schedule-based block rules and bypasses
-        val activeBlockRules = repository.getAllBlockRules()
-        val activeBypasses = repository.getAllBypasses()
-
-        // If blocked by timer, apply threshold check before deciding enforcement path
-        if (blockingTimer != null) {
-            val remainingSeconds = blockingTimer.getRemainingSeconds(currentTimeMillis)
-
-            // If remaining time is below threshold, deny bypass and enforce immediately
-            if (remainingSeconds < MIN_BYPASS_REMAINING_SECONDS) {
-                lastBlockedPackage = packageName
-                lastEnforcedPackage = packageName
-                lastEnforceTimeMs = currentTimeMillis
-                enforceBlock(packageName)
-                return
-            }
-
-            // Remaining time >= threshold: treat timer as a blocking rule by creating
-            // a pseudo BlockRule with the timer ID, then let BlockDecisionEngine evaluate bypass
-            val timerBlockRule = BlockRule(
-                id = blockingTimer.id,
-                targetApps = listOf(packageName),
-                type = BlockRuleType.OneTime(
-                    startTimeMillis = blockingTimer.startTimeMillis,
-                    endTimeMillis = blockingTimer.endTimeMillis
-                )
-            )
-            val result = BlockDecisionEngine.evaluate(
-                resourceId = packageName,
-                currentTimeMillis = currentTimeMillis,
-                activeBlockRules = activeBlockRules + timerBlockRule,
-                activeBypasses = activeBypasses
-            )
-
-            when (result.decision) {
-                Decision.BLOCK -> {
-                    lastBlockedPackage = packageName
-                    lastEnforcedPackage = packageName
-                    lastEnforceTimeMs = currentTimeMillis
-                    enforceBlock(packageName)
-                }
-                Decision.ALLOW -> {
-                    lastBlockedPackage = null
-                }
-            }
+        if (isBlockedByTimer) {
+            Log.d("BYPASS_DEBUG", "BLOCKED by TIMER")
+            lastBlockedPackage = packageName
+            lastEnforcedPackage = packageName
+            lastEnforceTimeMs = currentTimeMillis
+            enforceBlock(packageName)
             return
         }
 
         // Check schedules (existing logic)
+        val activeBlockRules = repository.getAllBlockRules()
+        val activeBypasses = repository.getAllBypasses()
+
+        Log.d("BYPASS_DEBUG", "routing through BlockDecisionEngine")
         val result = BlockDecisionEngine.evaluate(
             resourceId = packageName,
             currentTimeMillis = currentTimeMillis,
@@ -202,12 +167,14 @@ class BlockAccessibilityService : AccessibilityService() {
 
         when (result.decision) {
             Decision.BLOCK -> {
+                Log.d("BYPASS_DEBUG", "ENFORCING BLOCK for $packageName")
                 lastBlockedPackage = packageName
                 lastEnforcedPackage = packageName
                 lastEnforceTimeMs = currentTimeMillis
                 enforceBlock(packageName)
             }
             Decision.ALLOW -> {
+                Log.d("BYPASS_DEBUG", "BYPASS ACTIVE for $packageName")
                 lastBlockedPackage = null
             }
         }
@@ -406,12 +373,6 @@ class BlockAccessibilityService : AccessibilityService() {
         )
 
         private const val TAG = "BlockAccessibilitySvc"
-
-        /**
-         * Minimum remaining time on a blocking timer required for emergency bypass activation.
-         * Prevents last-second bypass abuse when timer is nearly complete.
-         */
-        private const val MIN_BYPASS_REMAINING_SECONDS = 120
 
         fun isServiceConnected(context: Context): Boolean {
             val prefs = context.getSharedPreferences("blocker_prefs", Context.MODE_PRIVATE)

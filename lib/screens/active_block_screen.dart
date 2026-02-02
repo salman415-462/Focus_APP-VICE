@@ -16,6 +16,7 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
   bool _isBypassActive = false;
   int _bypassRemainingSeconds = 0;
   List<Map<String, dynamic>> _activeTimers = [];
+  bool _showSecondaryTimers = false;
 
   int _pomodoroFocusDuration = 25;
   int _pomodoroBreakDuration = 5;
@@ -266,7 +267,7 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
     if (_isNavigating) return;
 
     try {
-      final success = await MethodChannelService.requestEmergencyBypass('');
+      final success = await MethodChannelService.requestEmergencyBypass('*');
       if (!mounted || _isNavigating) return;
 
       if (success) {
@@ -699,10 +700,26 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
   }
 
   Widget _buildPrimaryTimer() {
-    final timer = _activeTimers.isNotEmpty ? _activeTimers[0] : null;
-    final remainingSeconds = timer?['remainingSeconds'] as int? ?? 0;
-    final durationMinutes = timer?['durationMinutes'] as int? ?? 0;
-    final mode = timer?['mode'] as String? ?? 'FOCUS';
+    // Use the earliest-ending timer as primary, others run in background
+    // Use explicit loop instead of reduce() to avoid type issues with MethodChannel maps
+    Map<String, dynamic>? primaryTimer;
+
+    if (_activeTimers.isNotEmpty) {
+      primaryTimer = _activeTimers.first;
+
+      for (final timer in _activeTimers.skip(1)) {
+        final currentRemaining = primaryTimer!['remainingSeconds'] as int? ?? 0;
+        final nextRemaining = timer['remainingSeconds'] as int? ?? 0;
+
+        if (nextRemaining < currentRemaining) {
+          primaryTimer = timer;
+        }
+      }
+    }
+
+    final remainingSeconds = primaryTimer?['remainingSeconds'] as int? ?? 0;
+    final durationMinutes = primaryTimer?['durationMinutes'] as int? ?? 0;
+    final mode = primaryTimer?['mode'] as String? ?? 'FOCUS';
     final totalSeconds = durationMinutes * 60;
     final progress = _getProgress(remainingSeconds, totalSeconds);
     final modeColor = _getModeColor(mode);
@@ -742,12 +759,71 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
             ),
           ],
         ),
+        if (_activeTimers.length > 1) ...[
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _showSecondaryTimers = !_showSecondaryTimers;
+              });
+            },
+            child: Text(
+              _showSecondaryTimers
+                  ? 'Hide ${_activeTimers.length - 1} active'
+                  : '+${_activeTimers.length - 1} more active',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF9FBFC1),
+              ),
+            ),
+          ),
+          if (_showSecondaryTimers)
+            ..._activeTimers.skip(1).map(_buildSecondaryTimerItem).toList(),
+        ],
       ],
     );
   }
 
   List<String> _getAppNamesFromPackages(List<String> packages) {
     return packages;
+  }
+
+  Widget _buildSecondaryTimerItem(Map<String, dynamic> timer) {
+    final remaining = timer['remainingSeconds'] as int? ?? 0;
+    final minutes = remaining ~/ 60;
+    final seconds = remaining % 60;
+    final mode = timer['mode'] as String? ?? 'FOCUS';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0F172A),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              mode,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF9FBFC1),
+              ),
+            ),
+            Text(
+              '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFFE5E7EB),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -471,6 +471,7 @@ class MethodChannelHandler(private val context: Context) {
         val currentTimeMillis = System.currentTimeMillis()
 
         repository.clearExpiredBypasses(currentTimeMillis)
+        repository.clearExpiredTimers()
 
         val activeBypasses = repository.getAllBypasses()
 
@@ -488,7 +489,36 @@ class MethodChannelHandler(private val context: Context) {
         )
 
         repository.saveBypasses(activeBypasses + bypass)
+
+        // Pause any active timers that block this package
+        pauseTimersForPackage(packageName, currentTimeMillis)
+
         result.success(true)
+    }
+
+    private fun pauseTimersForPackage(packageName: String, currentTimeMillis: Long) {
+        val activeTimers = repository.getActiveTimers()
+        
+        // Find timers that block this package, or all timers if wildcard '*'
+        val timersToPause = if (packageName == "*") {
+            // Wildcard - pause ALL active timers
+            activeTimers
+        } else {
+            // Specific package - pause only timers that block this package
+            activeTimers.filter { timer ->
+                packageName in timer.blockedPackages
+            }
+        }
+
+        // Pause each timer for the bypass duration
+        timersToPause.forEach { timer ->
+            timer.pausedUntilMillis = currentTimeMillis + BYPASS_DURATION_MILLIS
+            repository.updateActiveTimer(timer)
+        }
+
+        if (timersToPause.isNotEmpty()) {
+            Log.d("MethodChannelHandler", "Paused ${timersToPause.size} timer(s) for emergency bypass of $packageName")
+        }
     }
 
     private fun startOneTimeTimer(

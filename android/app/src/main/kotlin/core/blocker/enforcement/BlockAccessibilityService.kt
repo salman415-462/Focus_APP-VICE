@@ -140,13 +140,38 @@ class BlockAccessibilityService : AccessibilityService() {
 
         // Check active timers first (custom duration)
         val activeTimers = repository.getActiveTimers().filter { it.isActive(currentTimeMillis) }
-        val isBlockedByTimer = activeTimers.any { packageName in it.blockedPackages }
+        val blockingTimer = activeTimers.firstOrNull { packageName in it.blockedPackages }
 
-        if (isBlockedByTimer) {
-            lastBlockedPackage = packageName
-            lastEnforcedPackage = packageName
-            lastEnforceTimeMs = currentTimeMillis
-            enforceBlock(packageName)
+        if (blockingTimer != null) {
+            // Get remaining time for this timer
+            val remainingSeconds = blockingTimer.getRemainingSeconds(currentTimeMillis)
+
+            // Enforce 2-minute minimum remaining time rule for bypass
+            val bypassAllowed = remainingSeconds >= MIN_BYPASS_REMAINING_SECONDS
+
+            if (!bypassAllowed) {
+                // Timer has less than 2 minutes remaining - reject bypass and enforce block
+                lastBlockedPackage = packageName
+                lastEnforcedPackage = packageName
+                lastEnforceTimeMs = currentTimeMillis
+                enforceBlock(packageName)
+                return
+            }
+
+            // Timer has >= 2 minutes remaining - check bypass rules via BlockDecisionEngine
+            val result = BlockDecisionEngine.evaluate(
+                resourceId = packageName,
+                currentTimeMillis = currentTimeMillis,
+                activeBlockRules = emptyList(), // timers act as block source
+                activeBypasses = repository.getAllBypasses()
+            )
+
+            if (result.decision == Decision.BLOCK) {
+                lastBlockedPackage = packageName
+                lastEnforcedPackage = packageName
+                lastEnforceTimeMs = currentTimeMillis
+                enforceBlock(packageName)
+            }
             return
         }
 
@@ -367,6 +392,12 @@ class BlockAccessibilityService : AccessibilityService() {
         )
 
         private const val TAG = "BlockAccessibilitySvc"
+
+        /**
+         * Minimum remaining time on a blocking timer required for emergency bypass activation.
+         * Prevents last-second bypass abuse when timer is nearly complete.
+         */
+        private const val MIN_BYPASS_REMAINING_SECONDS = 120
 
         fun isServiceConnected(context: Context): Boolean {
             val prefs = context.getSharedPreferences("blocker_prefs", Context.MODE_PRIVATE)
