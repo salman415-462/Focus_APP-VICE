@@ -8,6 +8,7 @@ import 'screens/active_block_screen.dart';
 import 'screens/permission_status_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/stats_screen.dart';
 
 void main() {
   runApp(const FocusGuardApp());
@@ -93,6 +94,7 @@ class FocusGuardApp extends StatelessWidget {
         '/active-block': (context) => const ActiveBlockScreen(),
         '/permissions': (context) => const PermissionStatusScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
+        '/stats': (context) => const StatsScreen(),
       },
     );
   }

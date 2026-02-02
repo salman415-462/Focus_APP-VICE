@@ -135,6 +135,10 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.pushNamed(context, '/mode-selection');
   }
 
+  void _navigateToStats() {
+    Navigator.pushNamed(context, '/stats');
+  }
+
   Widget _buildEmptyState() {
     return Column(
       children: [
@@ -234,15 +238,31 @@ class _HomeScreenState extends State<HomeScreen> {
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              GestureDetector(
-                                onTap: _navigateToModeSelection,
-                                child: const Text(
-                                  '+',
-                                  style: TextStyle(
-                                    color: Color(0xFF9FBFC1),
-                                    fontSize: 22,
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  GestureDetector(
+                                    onTap: _navigateToStats,
+                                    child: const Text(
+                                      'Stats',
+                                      style: TextStyle(
+                                        color: Color(0xFF9FBFC1),
+                                        fontSize: 14,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  const SizedBox(width: 20),
+                                  GestureDetector(
+                                    onTap: _navigateToModeSelection,
+                                    child: const Text(
+                                      '+',
+                                      style: TextStyle(
+                                        color: Color(0xFF9FBFC1),
+                                        fontSize: 22,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
