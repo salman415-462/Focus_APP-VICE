@@ -2,6 +2,95 @@ import 'package:flutter/material.dart';
 import '../services/method_channel_service.dart';
 import '../services/selected_apps_store.dart';
 
+class VerticalTimeDial extends StatefulWidget {
+  final String label;
+  final int value;
+  final ValueChanged<int> onChanged;
+  final int min;
+  final int max;
+
+  const VerticalTimeDial({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    required this.min,
+    required this.max,
+  });
+
+  @override
+  State<VerticalTimeDial> createState() => _VerticalTimeDialState();
+}
+
+class _VerticalTimeDialState extends State<VerticalTimeDial> {
+  double _accumulatedDelta = 0.0;
+  static const double _stepSize = 18.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF9FBFC1),
+          ),
+        ),
+        const SizedBox(height: 4),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onVerticalDragUpdate: (details) {
+            _accumulatedDelta += details.delta.dy;
+            int newValue = widget.value;
+            if (_accumulatedDelta >= _stepSize) {
+              newValue = (widget.value + 1).clamp(widget.min, widget.max);
+              _accumulatedDelta = 0.0;
+            } else if (_accumulatedDelta <= -_stepSize) {
+              newValue = (widget.value - 1).clamp(widget.min, widget.max);
+              _accumulatedDelta = 0.0;
+            }
+            if (newValue != widget.value) {
+              widget.onChanged(newValue);
+            }
+          },
+          child: Container(
+            height: 78,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF1B2230), Color(0xFF151B28)],
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: ClipRect(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.keyboard_arrow_up,
+                      color: const Color(0xFF9FBFC1), size: 14),
+                  Text(
+                    widget.value.toString().padLeft(2, '0'),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFFF4F3EF),
+                    ),
+                  ),
+                  Icon(Icons.keyboard_arrow_down,
+                      color: const Color(0xFF9FBFC1), size: 14),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 enum ScheduleType {
   oneTime,
   daily,
@@ -225,7 +314,6 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen> {
                   color: const Color(0xFF4FA3A5).withOpacity(0.6), width: 2)
               : null,
         ),
-        height: 72,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
@@ -356,69 +444,33 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Hours',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF9FBFC1),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(color: Color(0xFFF4F3EF)),
-                      decoration: const InputDecoration(
-                        filled: true,
-                        fillColor: Color(0xFF0C0F16),
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.all(12),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          _customDurationHours = int.tryParse(value) ?? 0;
-                        });
-                      },
-                      controller: TextEditingController(
-                          text: _customDurationHours.toString()),
-                    ),
-                  ],
+              SizedBox(
+                width: 120,
+                child: VerticalTimeDial(
+                  label: 'Hours',
+                  value: _customDurationHours,
+                  onChanged: (value) {
+                    setState(() {
+                      _customDurationHours = value;
+                    });
+                  },
+                  min: 0,
+                  max: 23,
                 ),
               ),
               const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Minutes',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF9FBFC1),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(color: Color(0xFFF4F3EF)),
-                      decoration: const InputDecoration(
-                        filled: true,
-                        fillColor: Color(0xFF0C0F16),
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.all(12),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          _customDurationMinutes = int.tryParse(value) ?? 0;
-                        });
-                      },
-                      controller: TextEditingController(
-                          text: _customDurationMinutes.toString()),
-                    ),
-                  ],
+              SizedBox(
+                width: 120,
+                child: VerticalTimeDial(
+                  label: 'Minutes',
+                  value: _customDurationMinutes,
+                  onChanged: (value) {
+                    setState(() {
+                      _customDurationMinutes = value;
+                    });
+                  },
+                  min: 0,
+                  max: 59,
                 ),
               ),
             ],
@@ -543,7 +595,7 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen> {
               ),
             ),
             SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 100),
+              padding: const EdgeInsets.only(bottom: 24),
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
