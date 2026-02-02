@@ -1,0 +1,86 @@
+<svg width="360" height="800" viewBox="0 0 360 800"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <!-- Background -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0C0F16"/>
+      <stop offset="100%" stop-color="#141722"/>
+    </linearGradient>
+
+    <!-- Focus field -->
+    <radialGradient id="focusField" cx="50%" cy="32%" r="45%">
+      <stop offset="0%" stop-color="#1E2E30" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#0C0F16" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Card -->
+    <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1B2230"/>
+      <stop offset="100%" stop-color="#151B28"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="360" height="800" fill="url(#bg)"/>
+  <rect width="360" height="800" fill="url(#focusField)"/>
+
+  <!-- App bar -->
+  <text x="24" y="52" fill="#F4F3EF" font-size="20" font-weight="500">
+    Focus Active
+  </text>
+
+  <!-- Primary timer -->
+  <g transform="translate(180 200)">
+    <circle r="54" stroke="#2F6F73" stroke-width="4" fill="none"/>
+    <circle r="36" fill="#2F6F73"/>
+
+    <text y="8" text-anchor="middle"
+          fill="#0C0F16" font-size="14" font-weight="600">
+      42:18
+    </text>
+  </g>
+
+  <text x="180" y="280" text-anchor="middle"
+        fill="#9FBFC1" font-size="13">
+    Time remaining
+  </text>
+
+  <!-- Divider -->
+  <line x1="24" y1="320" x2="336" y2="320" stroke="#243036"/>
+
+  <!-- Active controls -->
+  <text x="24" y="352" fill="#F4F3EF" font-size="15">
+    Active controls
+  </text>
+
+  <!-- Control item -->
+  <g transform="translate(16 380)">
+    <rect width="328" height="64" rx="18" fill="url(#cardGrad)"/>
+    <circle cx="28" cy="32" r="10" fill="#4FA3A5"/>
+    <text x="56" y="30" fill="#F4F3EF" font-size="14">
+      App Blocking
+    </text>
+    <text x="56" y="48" fill="#9FBFC1" font-size="12">
+      Selected apps restricted
+    </text>
+  </g>
+
+  <!-- Pomodoro example -->
+  <g transform="translate(16 456)">
+    <rect width="328" height="64" rx="18" fill="url(#cardGrad)"/>
+    <circle cx="28" cy="32" r="10" stroke="#9FBFC1" stroke-width="2" fill="none"/>
+    <text x="56" y="30" fill="#F4F3EF" font-size="14">
+      Pomodoro
+    </text>
+    <text x="56" y="48" fill="#9FBFC1" font-size="12">
+      Focus interval running
+    </text>
+  </g>
+
+  <!-- Emergency bypass -->
+  <text x="180" y="720" text-anchor="middle"
+        fill="#8B5A5A" font-size="13">
+    Emergency bypass
+  </text>
+</svg>

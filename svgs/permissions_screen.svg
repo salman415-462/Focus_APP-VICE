@@ -1,0 +1,111 @@
+<svg width="360" height="800" viewBox="0 0 360 800"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <!-- Background -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0C0F16"/>
+      <stop offset="100%" stop-color="#141722"/>
+    </linearGradient>
+
+    <!-- Header depth -->
+    <linearGradient id="headerGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#141A26"/>
+      <stop offset="100%" stop-color="#0C0F16"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="360" height="800" fill="url(#bg)"/>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="360" height="120" fill="url(#headerGrad)"/>
+  <text x="24" y="52" fill="#F4F3EF" font-size="20" font-weight="500">
+    Permissions
+  </text>
+  <text x="24" y="78" fill="#9FBFC1" font-size="13">
+    Required to protect your focus
+  </text>
+
+  <!-- Section title -->
+  <text x="24" y="140" fill="#F4F3EF" font-size="16">
+    Required permissions
+  </text>
+
+  <!-- Accessibility card -->
+  <g transform="translate(16 168)">
+    <rect width="328" height="88" rx="16" fill="#161C29"/>
+    <rect width="328" height="88" rx="16" fill="none"
+          stroke="#2E3A3D" stroke-opacity="0.6"/>
+
+    <!-- Icon -->
+    <circle cx="36" cy="44" r="18" fill="#2F3A3C"/>
+    <text x="36" y="50" text-anchor="middle" fill="#E36D6D">!</text>
+
+    <!-- Text -->
+    <text x="68" y="36" fill="#F4F3EF" font-size="15">
+      Accessibility Service
+    </text>
+    <text x="68" y="58" fill="#9FBFC1" font-size="13">
+      Detects and blocks distractions
+    </text>
+
+    <!-- Action -->
+    <text x="300" y="50" text-anchor="end"
+          fill="#4FA3A5" font-size="13">
+      Enable
+    </text>
+  </g>
+
+  <!-- Overlay card -->
+  <g transform="translate(16 268)">
+    <rect width="328" height="88" rx="16" fill="#161C29"/>
+    <rect width="328" height="88" rx="16" fill="none"
+          stroke="#2F6F73" stroke-opacity="0.6"/>
+
+    <circle cx="36" cy="44" r="18" fill="#2F6F73"/>
+    <text x="36" y="50" text-anchor="middle" fill="#0C0F16">✓</text>
+
+    <text x="68" y="36" fill="#F4F3EF" font-size="15">
+      Overlay permission
+    </text>
+    <text x="68" y="58" fill="#9FBFC1" font-size="13">
+      Shows focus protection
+    </text>
+
+    <text x="300" y="50" text-anchor="end"
+          fill="#8FD6D6" font-size="13">
+      Enabled
+    </text>
+  </g>
+
+  <!-- Device Admin card -->
+  <g transform="translate(16 368)">
+    <rect width="328" height="88" rx="16" fill="#161C29"/>
+    <rect width="328" height="88" rx="16" fill="none"
+          stroke="#2F6F73" stroke-opacity="0.6"/>
+
+    <circle cx="36" cy="44" r="18" fill="#2F6F73"/>
+    <text x="36" y="50" text-anchor="middle" fill="#0C0F16">✓</text>
+
+    <text x="68" y="36" fill="#F4F3EF" font-size="15">
+      Device admin
+    </text>
+    <text x="68" y="58" fill="#9FBFC1" font-size="13">
+      Prevents disabling protection
+    </text>
+
+    <text x="300" y="50" text-anchor="end"
+          fill="#8FD6D6" font-size="13">
+      Enabled
+    </text>
+  </g>
+
+  <!-- Primary action -->
+  <rect x="24" y="700" width="312" height="48" rx="16"
+        fill="#2F6F73"/>
+  <text x="180" y="732" text-anchor="middle"
+        fill="#0C0F16" font-size="15" font-weight="500">
+    Continue
+  </text>
+</svg>

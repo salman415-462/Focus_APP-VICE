@@ -1,0 +1,99 @@
+<svg width="360" height="800" viewBox="0 0 360 800"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <!-- Background -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0C0F16"/>
+      <stop offset="100%" stop-color="#141722"/>
+    </linearGradient>
+
+    <!-- Card gradient -->
+    <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1B2230"/>
+      <stop offset="100%" stop-color="#151B28"/>
+    </linearGradient>
+
+    <!-- Active accent -->
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4FA3A5"/>
+      <stop offset="100%" stop-color="#2F6F73"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="360" height="800" fill="url(#bg)"/>
+
+  <!-- App bar -->
+  <text x="24" y="52" fill="#9FBFC1" font-size="20">‹</text>
+  <text x="56" y="52" fill="#F4F3EF" font-size="20" font-weight="500">
+    Choose Mode
+  </text>
+
+  <!-- Subtitle -->
+  <text x="24" y="88" fill="#9FBFC1" font-size="13">
+    How do you want to stay focused?
+  </text>
+
+  <!-- Focus / App Blocking -->
+  <g transform="translate(16 120)">
+    <rect width="328" height="96" rx="18" fill="url(#cardGrad)"/>
+    <rect width="328" height="96" rx="18"
+          fill="none" stroke="#2F6F73" stroke-opacity="0.7"/>
+
+    <!-- Icon -->
+    <circle cx="36" cy="48" r="18" fill="url(#accentGrad)"/>
+    <line x1="28" y1="48" x2="44" y2="48"
+          stroke="#0C0F16" stroke-width="2"/>
+
+    <!-- Text -->
+    <text x="72" y="42" fill="#F4F3EF" font-size="16">
+      Focus / App Blocking
+    </text>
+    <text x="72" y="64" fill="#9FBFC1" font-size="13">
+      Block selected apps completely
+    </text>
+
+    <!-- Arrow -->
+    <text x="304" y="54" text-anchor="end"
+          fill="#9FBFC1" font-size="18">›</text>
+  </g>
+
+  <!-- Pomodoro -->
+  <g transform="translate(16 236)">
+    <rect width="328" height="96" rx="18" fill="url(#cardGrad)"/>
+    <rect width="328" height="96" rx="18"
+          fill="none" stroke="#2E3A4A"/>
+
+    <circle cx="36" cy="48" r="18" fill="#2E3A4A"/>
+    <circle cx="36" cy="48" r="10"
+            stroke="#9FBFC1" stroke-width="2" fill="none"/>
+
+    <text x="72" y="42" fill="#F4F3EF" font-size="16">
+      Pomodoro
+    </text>
+    <text x="72" y="64" fill="#9FBFC1" font-size="13">
+      Focus sessions with breaks
+    </text>
+
+    <text x="304" y="54" text-anchor="end"
+          fill="#9FBFC1" font-size="18">›</text>
+  </g>
+
+  <!-- Website Blocking (disabled) -->
+  <g transform="translate(16 352)" opacity="0.5">
+    <rect width="328" height="96" rx="18" fill="#121726"/>
+
+    <circle cx="36" cy="48" r="18" fill="#1E2433"/>
+    <rect x="28" y="42" width="16" height="12"
+          rx="2" stroke="#6B7C93" fill="none"/>
+
+    <text x="72" y="42" fill="#9FBFC1" font-size="16">
+      Website Blocking
+    </text>
+    <text x="72" y="64" fill="#6B7C93" font-size="13">
+      Coming soon
+    </text>
+  </g>
+
+</svg>

@@ -1,0 +1,76 @@
+<svg width="360" height="800" viewBox="0 0 360 800"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <!-- Background -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0C0F16"/>
+      <stop offset="100%" stop-color="#141722"/>
+    </linearGradient>
+
+    <!-- Soft center lift -->
+    <radialGradient id="centerLift" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#1C2430" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#0C0F16" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Button gradient -->
+    <linearGradient id="btnGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3B7F83"/>
+      <stop offset="100%" stop-color="#2F6F73"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="360" height="800" fill="url(#bg)"/>
+  <rect width="360" height="800" fill="url(#centerLift)"/>
+
+  <!-- App bar -->
+  <text x="24" y="52" fill="#F4F3EF" font-size="20" font-weight="500">
+    Focus Guard
+  </text>
+  <text x="336" y="52" text-anchor="end"
+        fill="#9FBFC1" font-size="22">
+    +
+  </text>
+
+  <!-- Section header -->
+  <text x="24" y="96" fill="#F4F3EF" font-size="16">
+    Active Sessions
+  </text>
+  <text x="336" y="96" text-anchor="end"
+        fill="#9FBFC1" font-size="13">
+    0 active
+  </text>
+
+  <!-- Empty state icon container -->
+  <g transform="translate(180 300)">
+    <circle r="46" fill="#161C29"/>
+    <circle r="46" fill="none" stroke="#2E3A4A"/>
+    <!-- Minimal crossed-timer icon -->
+    <line x1="-16" y1="-16" x2="16" y2="16"
+          stroke="#6B7C93" stroke-width="2"/>
+    <circle cx="0" cy="0" r="14"
+            stroke="#6B7C93" stroke-width="2" fill="none"/>
+  </g>
+
+  <!-- Empty state text -->
+  <text x="180" y="380" text-anchor="middle"
+        fill="#F4F3EF" font-size="16">
+    No active sessions
+  </text>
+
+  <text x="180" y="408" text-anchor="middle"
+        fill="#9FBFC1" font-size="13">
+    Start a focus session when you’re ready
+  </text>
+
+  <!-- Primary CTA -->
+  <rect x="110" y="460" width="140" height="48" rx="18"
+        fill="url(#btnGrad)"/>
+  <text x="180" y="492" text-anchor="middle"
+        fill="#0C0F16" font-size="15" font-weight="500">
+    Start Session
+  </text>
+
+</svg>

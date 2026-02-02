@@ -1,0 +1,55 @@
+<svg width="360" height="800" viewBox="0 0 360 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0C0F16"/>
+      <stop offset="100%" stop-color="#141722"/>
+    </linearGradient>
+
+    <radialGradient id="focusWell" cx="50%" cy="42%" r="38%">
+      <stop offset="0%" stop-color="#1B2A2D" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#0C0F16" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="ambientRing" cx="50%" cy="42%" r="28%">
+      <stop offset="70%" stop-color="#4FA3A5" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#4FA3A5" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- LOGO DEFS -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1A1F2B"/>
+      <stop offset="100%" stop-color="#0C0F16"/>
+    </linearGradient>
+
+    <linearGradient id="panelGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#242A38"/>
+      <stop offset="100%" stop-color="#161B25"/>
+    </linearGradient>
+
+    <linearGradient id="focusFill" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#1C2130"/>
+      <stop offset="100%" stop-color="#2A3246"/>
+    </linearGradient>
+
+    <filter id="softBlur">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+  </defs>
+
+  <rect width="360" height="800" fill="url(#bg)"/>
+  <rect width="360" height="800" fill="url(#focusWell)"/>
+  <rect width="360" height="800" fill="url(#ambientRing)"/>
+
+  <g transform="translate(100 240)">
+    <rect x="16" y="16" width="128" height="128" rx="28" fill="url(#bgGrad)" stroke="#2E3A3D" stroke-opacity="0.6"/>
+    <rect x="48" y="34" width="64" height="92" rx="16" fill="url(#panelGrad)" opacity="0.9"/>
+    <path d="M48 98 Q48 92 54 92 H106 Q112 92 112 98 V124 H48 Z" fill="url(#focusFill)"/>
+    <rect x="60" y="108" width="40" height="3" rx="1.5" fill="#F4F3EF" opacity="0.45"/>
+    <rect x="74" y="30" width="12" height="14" rx="6" fill="#F4F3EF" opacity="0.7" filter="url(#softBlur)"/>
+  </g>
+
+  <text x="180" y="470" text-anchor="middle" fill="#F4F3EF" font-size="22" font-weight="500">Vise</text>
+  <text x="180" y="504" text-anchor="middle" fill="#A8D5D6" font-size="14">Your focus is protected.</text>
+
+  <circle cx="180" cy="560" r="16" stroke="#4FA3A5" stroke-width="2" fill="none" stroke-dasharray="42 84" opacity="0.8"/>
+</svg>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/block_overlay_background"
+    android:gravity="center"
+    android:padding="32dp">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:background="@drawable/block_overlay_background"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp">
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginBottom="24dp"
+            android:src="@drawable/ic_block_white"
+            android:contentDescription="Blocked" />
+
+        <TextView
+            android:id="@+id/overlay_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="This app is blocked"
+            android:textColor="@android:color/white"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Return to home to continue"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:alpha="0.8"
+            android:gravity="center" />
+
+    </LinearLayout>
+
+</RelativeLayout>

@@ -1,0 +1,140 @@
+<svg width="360" height="800" viewBox="0 0 360 800"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <!-- Background -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0C0F16"/>
+      <stop offset="100%" stop-color="#141722"/>
+    </linearGradient>
+
+    <!-- Card -->
+    <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1B2230"/>
+      <stop offset="100%" stop-color="#151B28"/>
+    </linearGradient>
+
+    <!-- Active accent -->
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4FA3A5"/>
+      <stop offset="100%" stop-color="#2F6F73"/>
+    </linearGradient>
+
+    <!-- CTA -->
+    <linearGradient id="ctaGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4FA3A5"/>
+      <stop offset="100%" stop-color="#2F6F73"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="360" height="800" fill="url(#bg)"/>
+
+  <!-- App bar -->
+  <text x="24" y="52" fill="#9FBFC1" font-size="20">‹</text>
+  <text x="56" y="52" fill="#F4F3EF" font-size="20" font-weight="500">
+    Schedule
+  </text>
+
+  <!-- Section title -->
+  <text x="24" y="92" fill="#F4F3EF" font-size="16">
+    Block schedule
+  </text>
+  <text x="24" y="116" fill="#9FBFC1" font-size="13">
+    Choose when focus protection applies
+  </text>
+
+  <!-- One-time -->
+  <g transform="translate(16 140)">
+    <rect width="328" height="72" rx="18" fill="url(#cardGrad)"/>
+    <circle cx="32" cy="36" r="10" stroke="#9FBFC1" stroke-width="2" fill="none"/>
+    <text x="60" y="32" fill="#F4F3EF" font-size="15">
+      One-time block
+    </text>
+    <text x="60" y="52" fill="#9FBFC1" font-size="13">
+      Block for a specific period
+    </text>
+  </g>
+
+  <!-- Daily (selected) -->
+  <g transform="translate(16 224)">
+    <rect width="328" height="72" rx="18" fill="url(#cardGrad)"/>
+    <rect width="328" height="72" rx="18"
+          fill="none" stroke="#4FA3A5" stroke-opacity="0.6"/>
+
+    <circle cx="32" cy="36" r="10" fill="#4FA3A5"/>
+    <text x="60" y="32" fill="#F4F3EF" font-size="15">
+      Daily schedule
+    </text>
+    <text x="60" y="52" fill="#9FBFC1" font-size="13">
+      Same time every day
+    </text>
+  </g>
+
+  <!-- Weekdays -->
+  <g transform="translate(16 308)">
+    <rect width="328" height="72" rx="18" fill="url(#cardGrad)"/>
+    <circle cx="32" cy="36" r="10" stroke="#9FBFC1" stroke-width="2" fill="none"/>
+    <text x="60" y="32" fill="#F4F3EF" font-size="15">
+      Weekdays only
+    </text>
+    <text x="60" y="52" fill="#9FBFC1" font-size="13">
+      Monday to Friday
+    </text>
+  </g>
+
+  <!-- Time range -->
+  <text x="24" y="412" fill="#F4F3EF" font-size="15">
+    Time range
+  </text>
+
+  <g transform="translate(16 436)">
+    <rect width="152" height="64" rx="16" fill="url(#cardGrad)"/>
+    <text x="76" y="28" text-anchor="middle"
+          fill="#9FBFC1" font-size="12">
+      Start
+    </text>
+    <text x="76" y="50" text-anchor="middle"
+          fill="#F4F3EF" font-size="18">
+      09:00
+    </text>
+  </g>
+
+  <g transform="translate(192 436)">
+    <rect width="152" height="64" rx="16" fill="url(#cardGrad)"/>
+    <text x="76" y="28" text-anchor="middle"
+          fill="#9FBFC1" font-size="12">
+      End
+    </text>
+    <text x="76" y="50" text-anchor="middle"
+          fill="#F4F3EF" font-size="18">
+      17:00
+    </text>
+  </g>
+
+  <!-- Duration -->
+  <text x="180" y="528" text-anchor="middle"
+        fill="#9FBFC1" font-size="13">
+    Duration
+  </text>
+  <text x="180" y="556" text-anchor="middle"
+        fill="#F4F3EF" font-size="20" font-weight="500">
+    8h 0m
+  </text>
+
+  <!-- Info / error -->
+  <rect x="24" y="588" width="312" height="44" rx="14"
+        fill="#2A1B1B"/>
+  <text x="180" y="616" text-anchor="middle"
+        fill="#E6B4B4" font-size="13">
+    A session may already be active
+  </text>
+
+  <!-- CTA -->
+  <rect x="24" y="688" width="312" height="52" rx="20"
+        fill="url(#ctaGrad)"/>
+  <text x="180" y="722" text-anchor="middle"
+        fill="#0C0F16" font-size="16" font-weight="600">
+    Start Focus Session
+  </text>
+</svg>
