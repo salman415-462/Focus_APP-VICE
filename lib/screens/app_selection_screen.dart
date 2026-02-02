@@ -128,8 +128,13 @@ class _AppSelectionScreenState extends State<AppSelectionScreen> {
     if (_blockedCount == 0) {
       _showWarningDialog();
     } else {
-      _isNavigating = true;
-      Navigator.pushNamed(context, '/schedule-config');
+      setState(() => _isNavigating = true);
+
+      Navigator.pushNamed(context, '/schedule-config').then((_) {
+        if (mounted) {
+          setState(() => _isNavigating = false);
+        }
+      });
     }
   }
 
@@ -160,8 +165,13 @@ class _AppSelectionScreenState extends State<AppSelectionScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              _isNavigating = true;
-              Navigator.pushNamed(context, '/schedule-config');
+              setState(() => _isNavigating = true);
+
+              Navigator.pushNamed(context, '/schedule-config').then((_) {
+                if (mounted) {
+                  setState(() => _isNavigating = false);
+                }
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF0F3460),

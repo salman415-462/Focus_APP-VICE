@@ -281,8 +281,18 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen> {
         return;
       }
 
-      _isNavigating = true;
-      Navigator.pushNamed(context, '/active-block');
+      setState(() {
+        _isSaving = true;
+        _isNavigating = true;
+      });
+
+      Navigator.pushNamed(context, '/active-block').then((_) {
+        if (!mounted) return;
+        setState(() {
+          _isSaving = false;
+          _isNavigating = false;
+        });
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
