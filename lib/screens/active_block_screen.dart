@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:ui' show FontFeature;
+import 'dart:ui' show PathMetric, PathMetrics, Tangent, Offset;
 import 'package:flutter/material.dart';
 import '../services/method_channel_service.dart';
 
@@ -10,7 +10,8 @@ class ActiveBlockScreen extends StatefulWidget {
   State<ActiveBlockScreen> createState() => _ActiveBlockScreenState();
 }
 
-class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
+class _ActiveBlockScreenState extends State<ActiveBlockScreen>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = true;
   bool _hasError = false;
   bool _isBypassActive = false;
@@ -26,16 +27,22 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
   bool _isNavigating = false;
 
   Timer? _refreshTimer;
+  AnimationController? _riverController;
 
   @override
   void initState() {
     super.initState();
     _loadBlockStatus();
+    _riverController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 18),
+    )..repeat();
   }
 
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _riverController?.dispose();
     super.dispose();
   }
 
@@ -223,18 +230,31 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
     return remainingSeconds / totalSeconds;
   }
 
+  bool _hasAppBlockingActive() {
+    return _activeTimers.any((timer) {
+      final mode = timer['mode'] as String? ?? '';
+      return mode == 'FOCUS' ||
+          mode == 'POMODORO_FOCUS' ||
+          mode == 'POMODORO_BREAK';
+    });
+  }
+
+  bool _hasPomodoroActive() {
+    return _activeTimers.any((timer) {
+      final mode = timer['mode'] as String? ?? '';
+      return mode == 'POMODORO_FOCUS' || mode == 'POMODORO_BREAK';
+    });
+  }
+
   void _requestBypass() {
     if (_isNavigating) return;
 
-    // Check if PIN is set
     MethodChannelService.isBypassPinSet().then((isPinSet) {
       if (!mounted || _isNavigating) return;
 
       if (isPinSet) {
-        // PIN is set, show Enter PIN dialog
         _showEnterPinDialog();
       } else {
-        // PIN is not set, show Set PIN dialog
         _showSetPinDialog();
       }
     });
@@ -247,17 +267,17 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
       context: context,
       barrierDismissible: true,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF151B28),
+        backgroundColor: const Color(0xFFFFFDF2),
         title: const Text(
           'Set Bypass PIN',
-          style: TextStyle(color: Color(0xFFF4F3EF)),
+          style: TextStyle(color: Color(0xFF2C2C25)),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
               'Set a PIN to protect emergency bypass. You will need this PIN to use bypass.',
-              style: TextStyle(color: Color(0xFF9FBFC1)),
+              style: TextStyle(color: Color(0xFF7A7A70)),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -265,15 +285,15 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
               keyboardType: TextInputType.number,
               maxLength: 8,
               obscureText: true,
-              style: const TextStyle(color: Color(0xFFF4F3EF)),
+              style: const TextStyle(color: Color(0xFF2C2C25)),
               decoration: const InputDecoration(
                 labelText: 'Enter PIN (4-8 digits)',
-                labelStyle: TextStyle(color: Color(0xFF9FBFC1)),
+                labelStyle: TextStyle(color: Color(0xFF7A7A70)),
                 enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF4FA3A5)),
+                  borderSide: BorderSide(color: Color(0xFF4E6E3A)),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF4FA3A5)),
+                  borderSide: BorderSide(color: Color(0xFF4E6E3A)),
                 ),
               ),
             ),
@@ -284,7 +304,7 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text(
               'Cancel',
-              style: TextStyle(color: Color(0xFF9FBFC1)),
+              style: TextStyle(color: Color(0xFF7A7A70)),
             ),
           ),
           ElevatedButton(
@@ -306,8 +326,8 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4FA3A5),
-              foregroundColor: const Color(0xFF0C0F16),
+              backgroundColor: const Color(0xFF4E6E3A),
+              foregroundColor: const Color(0xFFF4F3EF),
             ),
             child: const Text('Set PIN'),
           ),
@@ -323,17 +343,17 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
       context: context,
       barrierDismissible: true,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF151B28),
+        backgroundColor: const Color(0xFFFFFDF2),
         title: const Text(
           'Enter Bypass PIN',
-          style: TextStyle(color: Color(0xFFF4F3EF)),
+          style: TextStyle(color: Color(0xFF2C2C25)),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
               'Enter your PIN to activate emergency bypass.',
-              style: TextStyle(color: Color(0xFF9FBFC1)),
+              style: TextStyle(color: Color(0xFF7A7A70)),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -341,15 +361,15 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
               keyboardType: TextInputType.number,
               maxLength: 8,
               obscureText: true,
-              style: const TextStyle(color: Color(0xFFF4F3EF)),
+              style: const TextStyle(color: Color(0xFF2C2C25)),
               decoration: const InputDecoration(
                 labelText: 'Enter PIN',
-                labelStyle: TextStyle(color: Color(0xFF9FBFC1)),
+                labelStyle: TextStyle(color: Color(0xFF7A7A70)),
                 enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF4FA3A5)),
+                  borderSide: BorderSide(color: Color(0xFF4E6E3A)),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF4FA3A5)),
+                  borderSide: BorderSide(color: Color(0xFF4E6E3A)),
                 ),
               ),
             ),
@@ -360,7 +380,7 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text(
               'Cancel',
-              style: TextStyle(color: Color(0xFF9FBFC1)),
+              style: TextStyle(color: Color(0xFF7A7A70)),
             ),
           ),
           ElevatedButton(
@@ -370,7 +390,7 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
               await _verifyAndTriggerBypass(pin);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF8B5A5A),
+              backgroundColor: const Color(0xFF8B6B6B),
               foregroundColor: const Color(0xFFF4F3EF),
             ),
             child: const Text('Verify PIN'),
@@ -431,21 +451,21 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
       context: context,
       barrierDismissible: true,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF151B28),
+        backgroundColor: const Color(0xFFFFFDF2),
         title: const Text(
           'Error',
-          style: TextStyle(color: Color(0xFFF4F3EF)),
+          style: TextStyle(color: Color(0xFF2C2C25)),
         ),
         content: Text(
           message,
-          style: const TextStyle(color: Color(0xFF9FBFC1)),
+          style: const TextStyle(color: Color(0xFF7A7A70)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text(
               'OK',
-              style: TextStyle(color: Color(0xFF4FA3A5)),
+              style: TextStyle(color: Color(0xFF4E6E3A)),
             ),
           ),
         ],
@@ -458,14 +478,14 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF151B28),
+        backgroundColor: const Color(0xFFFFFDF2),
         title: const Text(
           'Session Ended',
-          style: TextStyle(color: Color(0xFFF4F3EF)),
+          style: TextStyle(color: Color(0xFF2C2C25)),
         ),
         content: const Text(
           'Your focus session has ended. You can now use your apps normally.',
-          style: TextStyle(color: Color(0xFF9FBFC1)),
+          style: TextStyle(color: Color(0xFF7A7A70)),
         ),
         actions: [
           ElevatedButton(
@@ -474,8 +494,8 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
               _exitScreen();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4FA3A5),
-              foregroundColor: const Color(0xFF0C0F16),
+              backgroundColor: const Color(0xFF4E6E3A),
+              foregroundColor: const Color(0xFFF4F3EF),
             ),
             child: const Text('Done'),
           ),
@@ -496,21 +516,21 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
       context: context,
       barrierDismissible: true,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF151B28),
+        backgroundColor: const Color(0xFFFFFDF2),
         title: const Text(
           'End Session?',
-          style: TextStyle(color: Color(0xFFF4F3EF)),
+          style: TextStyle(color: Color(0xFF2C2C25)),
         ),
         content: const Text(
           'Are you sure you want to end your focus session early?',
-          style: TextStyle(color: Color(0xFF9FBFC1)),
+          style: TextStyle(color: Color(0xFF7A7A70)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text(
               'Cancel',
-              style: TextStyle(color: Color(0xFF9FBFC1)),
+              style: TextStyle(color: Color(0xFF7A7A70)),
             ),
           ),
           ElevatedButton(
@@ -519,7 +539,7 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
               _exitScreen();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF8B5A5A),
+              backgroundColor: const Color(0xFF8B6B6B),
               foregroundColor: const Color(0xFFF4F3EF),
             ),
             child: const Text('End Session'),
@@ -529,318 +549,208 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
     );
   }
 
-  Widget _buildActiveControlItem({
-    required String title,
-    required String subtitle,
-    required bool isSelected,
-  }) {
-    return Container(
-      height: 64,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF1B2230), Color(0xFF151B28)],
-        ),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF4FA3A5) : Colors.transparent,
-              shape: BoxShape.circle,
-              border: !isSelected
-                  ? Border.all(color: const Color(0xFF9FBFC1), width: 2)
-                  : null,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFFF4F3EF),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF9FBFC1),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final scaleFactor = screenWidth / 360;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0F16),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0C0F16),
-        elevation: 0,
-        title: const Text(
-          'Focus Active',
-          style: TextStyle(
-            color: Color(0xFFF4F3EF),
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFFFFDF2),
+              Color(0xFFE9E7D8),
+            ],
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFFF4F3EF)),
-          onPressed: _isNavigating ? null : () => Navigator.pop(context),
-        ),
-        actions: [
-          if (_activeTimers.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1B2230),
-                borderRadius: BorderRadius.circular(8),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: SunlightPainter(),
+                ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.timer, color: Color(0xFF4FA3A5), size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${_activeTimers.length} active',
-                    style: const TextStyle(
-                      color: Color(0xFFF4F3EF),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFF4FA3A5),
-              ),
-            )
-          : SafeArea(
-              child: Stack(
-                children: [
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0xFF0C0F16), Color(0xFF141722)],
+              Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: _riverController!,
+                  builder: (context, child) {
+                    return CustomPaint(
+                      painter: RiverPainter(
+                        animationValue: _riverController!.value * 320,
                       ),
+                    );
+                  },
+                ),
+              ),
+              Positioned.fill(
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: MediaQuery.of(context).size.height,
                     ),
-                  ),
-                  Positioned.fill(
-                    child: Center(
-                      child: CustomPaint(
-                        size: const Size(800, 800),
-                        painter: FocusFieldPainter(),
-                      ),
-                    ),
-                  ),
-                  SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 24 * scaleFactor),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          SizedBox(height: 24 * scaleFactor),
+                          _buildHeader(scaleFactor),
                           if (_hasError) ...[
-                            Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF4D1A1A),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.all(12),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.warning,
-                                      color: Color(0xFFCF6679)),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      'Could not load block status.',
-                                      style: TextStyle(
-                                          color: Colors.white.withOpacity(0.9)),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16 * scaleFactor),
+                            _buildErrorBanner(scaleFactor),
                           ],
                           if (_activeTimers.isEmpty && !_isBypassActive) ...[
-                            const SizedBox(height: 120),
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Color(0xFF1B2230),
-                                    Color(0xFF151B28)
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                              padding: const EdgeInsets.all(32),
-                              child: Column(
-                                children: [
-                                  const Icon(
-                                    Icons.timer_off,
-                                    size: 64,
-                                    color: Color(0xFF9FBFC1),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  const Text(
-                                    'No Active Focus Session',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFFF4F3EF),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Redirecting...',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white.withOpacity(0.7),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 120),
+                            SizedBox(height: 120 * scaleFactor),
+                            _buildEmptyState(scaleFactor),
+                            SizedBox(height: 120 * scaleFactor),
                           ],
                           if (_activeTimers.isNotEmpty) ...[
-                            const SizedBox(height: 24),
-                            _buildPrimaryTimer(),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Time remaining',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF9FBFC1),
-                              ),
-                            ),
-                            const SizedBox(height: 32),
-                            Container(
-                              height: 1,
-                              color: const Color(0xFF243036),
-                            ),
-                            const SizedBox(height: 16),
-                            const Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                'Active controls',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFFF4F3EF),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            _buildActiveControlItem(
-                              title: 'App Blocking',
-                              subtitle: 'Selected apps restricted',
-                              isSelected: true,
-                            ),
-                            const SizedBox(height: 8),
-                            _buildActiveControlItem(
-                              title: 'Pomodoro',
-                              subtitle: 'Focus interval running',
-                              isSelected: false,
-                            ),
-                            const SizedBox(height: 80),
+                            SizedBox(height: 150 * scaleFactor),
+                            _buildTimerCard(scaleFactor),
+                            SizedBox(height: 40 * scaleFactor),
+                            _buildActiveControlsCard(scaleFactor),
+                            SizedBox(height: 168 * scaleFactor),
                           ],
                         ],
                       ),
                     ),
                   ),
-                  if (_activeTimers.isNotEmpty)
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Colors.transparent, Color(0xFF0C0F16)],
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              'Emergency bypass',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF8B5A5A),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 48,
-                              child: ElevatedButton(
-                                onPressed: _isBypassActive || _isNavigating
-                                    ? null
-                                    : _requestBypass,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: _isBypassActive
-                                      ? const Color(0xFF2A2A3E)
-                                      : const Color(0xFF8B5A5A),
-                                  foregroundColor: const Color(0xFFF4F3EF),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: Text(
-                                  _isBypassActive
-                                      ? 'Bypass (${_formatTime(_bypassRemainingSeconds)})'
-                                      : 'Emergency Bypass (2 min)',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
+                ),
               ),
-            ),
+              if (_activeTimers.isNotEmpty)
+                Positioned(
+                  bottom: 80 * scaleFactor,
+                  left: 0,
+                  right: 0,
+                  child: _buildEmergencyBypass(scaleFactor),
+                ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: LeavesPainter(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildPrimaryTimer() {
-    // Use the earliest-ending timer as primary, others run in background
-    // Use explicit loop instead of reduce() to avoid type issues with MethodChannel maps
+  Widget _buildHeader(double scaleFactor) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Focus in progress',
+          style: TextStyle(
+            fontSize: 18 * scaleFactor,
+            color: const Color(0xFF2C2C25).withOpacity(0.85),
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.symmetric(
+              horizontal: 12 * scaleFactor, vertical: 4 * scaleFactor),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE6EFE3),
+            borderRadius: BorderRadius.circular(14 * scaleFactor),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 10 * scaleFactor,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Text(
+            '${_activeTimers.length} active',
+            style: TextStyle(
+              fontSize: 13 * scaleFactor,
+              color: const Color(0xFF4E6E3A).withOpacity(0.9),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorBanner(double scaleFactor) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFE6EFE3),
+        borderRadius: BorderRadius.circular(8 * scaleFactor),
+      ),
+      padding: EdgeInsets.all(12 * scaleFactor),
+      child: Row(
+        children: [
+          const Icon(Icons.warning, color: Color(0xFF4E6E3A)),
+          SizedBox(width: 12 * scaleFactor),
+          Expanded(
+            child: Text(
+              'Could not load block status.',
+              style: TextStyle(
+                color: const Color(0xFF2C2C25).withOpacity(0.7),
+                fontSize: 13 * scaleFactor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(double scaleFactor) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFDF2),
+        borderRadius: BorderRadius.circular(32 * scaleFactor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12 * scaleFactor,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.all(32 * scaleFactor),
+      child: Column(
+        children: [
+          Icon(
+            Icons.timer_off,
+            size: 64 * scaleFactor,
+            color: const Color(0xFF7A7A70).withOpacity(0.8),
+          ),
+          SizedBox(height: 16 * scaleFactor),
+          Text(
+            'No Active Focus Session',
+            style: TextStyle(
+              fontSize: 20 * scaleFactor,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF2C2C25),
+            ),
+          ),
+          SizedBox(height: 8 * scaleFactor),
+          Text(
+            'Redirecting...',
+            style: TextStyle(
+              fontSize: 14 * scaleFactor,
+              color: const Color(0xFF2C2C25).withOpacity(0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimerCard(double scaleFactor) {
     Map<String, dynamic>? primaryTimer;
 
     if (_activeTimers.isNotEmpty) {
@@ -863,119 +773,188 @@ class _ActiveBlockScreenState extends State<ActiveBlockScreen> {
     final progress = _getProgress(remainingSeconds, totalSeconds);
     final modeColor = _getModeColor(mode);
 
-    return Column(
-      children: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              width: 108,
-              height: 108,
-              child: CircularProgressIndicator(
-                value: progress.clamp(0.0, 1.0),
-                strokeWidth: 4,
-                backgroundColor: Colors.transparent,
-                valueColor: AlwaysStoppedAnimation<Color>(modeColor),
-              ),
-            ),
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: modeColor,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  _formatTime(remainingSeconds),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF0C0F16),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        if (_activeTimers.length > 1) ...[
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _showSecondaryTimers = !_showSecondaryTimers;
-              });
-            },
-            child: Text(
-              _showSecondaryTimers
-                  ? 'Hide ${_activeTimers.length - 1} active'
-                  : '+${_activeTimers.length - 1} more active',
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF9FBFC1),
-              ),
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFDF2),
+        borderRadius: BorderRadius.circular(32 * scaleFactor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 14 * scaleFactor,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.symmetric(
+          horizontal: 54 * scaleFactor, vertical: 40 * scaleFactor),
+      child: Column(
+        children: [
+          Text(
+            _formatTime(remainingSeconds),
+            style: TextStyle(
+              fontSize: 48 * scaleFactor,
+              color: const Color(0xFF242420).withOpacity(0.9),
+              fontWeight: FontWeight.w600,
             ),
           ),
-          if (_showSecondaryTimers)
-            ..._activeTimers.skip(1).map(_buildSecondaryTimerItem).toList(),
+          SizedBox(height: 14 * scaleFactor),
+          Text(
+            'remaining',
+            style: TextStyle(
+              fontSize: 14 * scaleFactor,
+              color: const Color(0xFF7A7A70).withOpacity(0.8),
+            ),
+          ),
         ],
-      ],
+      ),
     );
   }
 
-  List<String> _getAppNamesFromPackages(List<String> packages) {
-    return packages;
+  Widget _buildActiveControlsCard(double scaleFactor) {
+    final appBlockingActive = _hasAppBlockingActive();
+    final pomodoroActive = _hasPomodoroActive();
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFFFF),
+        borderRadius: BorderRadius.circular(32 * scaleFactor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12 * scaleFactor,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.symmetric(
+          horizontal: 24 * scaleFactor, vertical: 24 * scaleFactor),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Protections active',
+            style: TextStyle(
+              fontSize: 15 * scaleFactor,
+              color: const Color(0xFF2C2C25).withOpacity(0.85),
+            ),
+          ),
+          SizedBox(height: 20 * scaleFactor),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'App blocking',
+                style: TextStyle(
+                  fontSize: 13 * scaleFactor,
+                  color: const Color(0xFF7A7A70).withOpacity(0.8),
+                ),
+              ),
+              Text(
+                appBlockingActive ? 'On' : 'Off',
+                style: TextStyle(
+                  fontSize: 13 * scaleFactor,
+                  color: appBlockingActive
+                      ? const Color(0xFF4E6E3A).withOpacity(0.85)
+                      : const Color(0xFF7A7A70).withOpacity(0.7),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 18 * scaleFactor),
+          Container(
+            height: 1,
+            color: const Color(0xFFE0DED6).withOpacity(0.6),
+          ),
+          SizedBox(height: 18 * scaleFactor),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Pomodoro rhythm',
+                style: TextStyle(
+                  fontSize: 13 * scaleFactor,
+                  color: const Color(0xFF7A7A70).withOpacity(0.8),
+                ),
+              ),
+              Text(
+                pomodoroActive ? 'On' : 'Off',
+                style: TextStyle(
+                  fontSize: 13 * scaleFactor,
+                  color: pomodoroActive
+                      ? const Color(0xFF4E6E3A).withOpacity(0.85)
+                      : const Color(0xFF7A7A70).withOpacity(0.7),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
-  Widget _buildSecondaryTimerItem(Map<String, dynamic> timer) {
-    final remaining = timer['remainingSeconds'] as int? ?? 0;
-    final minutes = remaining ~/ 60;
-    final seconds = remaining % 60;
-    final mode = timer['mode'] as String? ?? 'FOCUS';
-
+  Widget _buildEmergencyBypass(double scaleFactor) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0F172A),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              mode,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF9FBFC1),
+      padding: EdgeInsets.symmetric(horizontal: 24 * scaleFactor),
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: _isBypassActive || _isNavigating ? null : _requestBypass,
+            child: Text(
+              'Emergency bypass',
+              style: TextStyle(
+                fontSize: 13 * scaleFactor,
+                color: const Color(0xFF8B6B6B).withOpacity(0.75),
+                decoration: TextDecoration.underline,
               ),
             ),
-            Text(
-              '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFFE5E7EB),
+          ),
+          SizedBox(height: 8 * scaleFactor),
+          SizedBox(
+            width: double.infinity,
+            height: 48 * scaleFactor,
+            child: ElevatedButton(
+              onPressed:
+                  _isBypassActive || _isNavigating ? null : _requestBypass,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _isBypassActive
+                    ? const Color(0xFFE0DED6).withOpacity(0.6)
+                    : const Color(0xFF9C8585).withOpacity(0.7),
+                foregroundColor: const Color(0xFFF4F3EF).withOpacity(0.9),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12 * scaleFactor),
+                ),
+                shadowColor: Colors.black.withOpacity(0.05),
+                elevation: 4,
+              ),
+              child: Text(
+                _isBypassActive
+                    ? 'Bypass (${_formatTime(_bypassRemainingSeconds)})'
+                    : 'Emergency Bypass (2 min)',
+                style: TextStyle(
+                  fontSize: 14 * scaleFactor,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class FocusFieldPainter extends CustomPainter {
+class SunlightPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height * 0.32);
-    final radius = size.width * 0.45;
+    final center = Offset(size.width * 0.2, 0);
+    final radius = size.width * 1.4;
 
     final gradient = RadialGradient(
       colors: [
-        const Color(0xFF1E2E30).withOpacity(0.65),
-        const Color(0xFF0C0F16).withOpacity(0),
+        const Color(0xFFFFF2B0).withOpacity(0.35),
+        const Color(0xFFFFF2B0).withOpacity(0),
       ],
     );
 
@@ -985,6 +964,126 @@ class FocusFieldPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(center, radius, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class RiverPainter extends CustomPainter {
+  final double animationValue;
+
+  RiverPainter({required this.animationValue});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path();
+    path.moveTo(220, -80);
+    path.cubicTo(260, 120, 180, 260, 220, 420);
+    path.cubicTo(260, 600, 180, 760, 220, 900);
+
+    final gradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        const Color(0xFFD9F2EC).withOpacity(0.35),
+        const Color(0xFFB7DDD4).withOpacity(0.25),
+      ],
+    );
+
+    final paint = Paint()
+      ..shader =
+          gradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 36
+      ..strokeCap = StrokeCap.round;
+
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final dashArray = <double>[80, 80];
+
+    Path dashPath = Path();
+    PathMetrics pathMetrics = path.computeMetrics();
+    bool drawDash = true;
+    double currentDashLength = 0;
+
+    for (PathMetric metric in pathMetrics) {
+      double length = metric.length;
+      double distance = 0;
+
+      while (distance < length) {
+        if (drawDash) {
+          double remainingDash = dashArray[0] - currentDashLength;
+          double segmentLength = remainingDash.clamp(0, length - distance);
+
+          Tangent? tangent = metric.getTangentForOffset(distance);
+          if (tangent != null) {
+            dashPath.moveTo(tangent.position.dx, tangent.position.dy);
+          }
+
+          Tangent? endTangent =
+              metric.getTangentForOffset(distance + segmentLength);
+          if (endTangent != null) {
+            dashPath.lineTo(endTangent.position.dx, endTangent.position.dy);
+          }
+
+          distance += segmentLength;
+          currentDashLength += segmentLength;
+
+          if (currentDashLength >= dashArray[0]) {
+            drawDash = false;
+            currentDashLength = 0;
+          }
+        } else {
+          double gapLength = dashArray[1].clamp(0, length - distance);
+          distance += gapLength;
+          drawDash = true;
+        }
+      }
+    }
+
+    canvas.drawPath(dashPath, paint);
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class LeavesPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scaleX = size.width / 360;
+    final scaleY = size.height / 800;
+
+    final bigLeafPaint = Paint()
+      ..color = const Color(0xFF5F7743).withOpacity(0.65)
+      ..style = PaintingStyle.fill;
+
+    canvas.save();
+    canvas.scale(scaleX, scaleY);
+    canvas.translate(-30, 640);
+    canvas.rotate(-18 * 3.14159 / 180);
+    _drawBigLeaf(canvas, bigLeafPaint);
+    canvas.restore();
+
+    canvas.save();
+    canvas.scale(scaleX, scaleY);
+    canvas.translate(260, 80);
+    canvas.rotate(22 * 3.14159 / 180);
+    _drawBigLeaf(canvas, bigLeafPaint);
+    canvas.restore();
+  }
+
+  void _drawBigLeaf(Canvas canvas, Paint paint) {
+    final path = Path();
+    path.moveTo(0, 0);
+    path.cubicTo(20, -34, 70, -34, 90, 0);
+    path.cubicTo(70, 20, 20, 20, 0, 0);
+    path.close();
+    canvas.drawPath(path, paint);
   }
 
   @override

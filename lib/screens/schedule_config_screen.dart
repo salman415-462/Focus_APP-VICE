@@ -38,7 +38,7 @@ class _VerticalTimeDialState extends State<VerticalTimeDial> {
           widget.label,
           style: const TextStyle(
             fontSize: 12,
-            color: Color(0xFF9FBFC1),
+            color: Color(0xFF7A7A70),
           ),
         ),
         const SizedBox(height: 4),
@@ -61,29 +61,32 @@ class _VerticalTimeDialState extends State<VerticalTimeDial> {
           child: Container(
             height: 78,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF1B2230), Color(0xFF151B28)],
-              ),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.14),
+                  offset: const Offset(0, 10),
+                  blurRadius: 18,
+                ),
+              ],
             ),
             child: ClipRect(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.keyboard_arrow_up,
-                      color: const Color(0xFF9FBFC1), size: 14),
+                      color: const Color(0xFF9A9A8E), size: 14),
                   Text(
                     widget.value.toString().padLeft(2, '0'),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFFF4F3EF),
+                      color: Color(0xFF2C2C25),
                     ),
                   ),
                   Icon(Icons.keyboard_arrow_down,
-                      color: const Color(0xFF9FBFC1), size: 14),
+                      color: const Color(0xFF9A9A8E), size: 14),
                 ],
               ),
             ),
@@ -110,7 +113,7 @@ class ScheduleConfigScreen extends StatefulWidget {
 
 class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
     with RouteAware {
-  ScheduleType _scheduleType = ScheduleType.oneTime;
+  ScheduleType _scheduleType = ScheduleType.daily;
   TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 17, minute: 0);
   bool _isSaving = false;
@@ -166,9 +169,9 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF4FA3A5),
-              surface: Color(0xFF1B2230),
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF6E8F5E),
+              surface: Color(0xFFFFFFFF),
             ),
           ),
           child: child!,
@@ -190,9 +193,9 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF4FA3A5),
-              surface: Color(0xFF1B2230),
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF6E8F5E),
+              surface: Color(0xFFFFFFFF),
             ),
           ),
           child: child!,
@@ -221,13 +224,18 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
     return '$hour:$minute';
   }
 
-  String _formatDuration(int minutes) {
+  String _formatDurationHours(int minutes) {
     final hours = minutes ~/ 60;
-    final mins = minutes % 60;
-    if (hours > 0) {
-      return '${hours}h ${mins}m';
-    }
-    return '${mins}m';
+    return '$hours hours';
+  }
+
+  String _formatCustomEndTime() {
+    final now = DateTime.now();
+    final endTime = now.add(
+        Duration(hours: _customDurationHours, minutes: _customDurationMinutes));
+    final hour = endTime.hour.toString().padLeft(2, '0');
+    final minute = endTime.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 
   List<String> _getBlockedPackages() {
@@ -324,7 +332,6 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
   }
 
   Widget _buildScheduleTypeCard({
-    required IconData icon,
     required String title,
     required String subtitle,
     required bool isSelected,
@@ -333,115 +340,91 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        width: 312,
+        height: 64,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1B2230), Color(0xFF151B28)],
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: isSelected
-              ? Border.all(
-                  color: const Color(0xFF4FA3A5).withOpacity(0.6), width: 2)
-              : null,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color:
-                    isSelected ? const Color(0xFF4FA3A5) : Colors.transparent,
-                shape: BoxShape.circle,
-                border: !isSelected
-                    ? Border.all(color: const Color(0xFF9FBFC1), width: 2)
-                    : null,
-              ),
-              child: Icon(
-                icon,
-                color: isSelected
-                    ? const Color(0xFF151B28)
-                    : const Color(0xFF9FBFC1),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFFF4F3EF),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF9FBFC1),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              isSelected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_unchecked,
-              color: isSelected
-                  ? const Color(0xFF4FA3A5)
-                  : const Color(0xFF9FBFC1),
-              size: 20,
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.14),
+              offset: const Offset(0, 10),
+              blurRadius: 18,
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTimeButton({
-    required String label,
-    required String time,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1B2230), Color(0xFF151B28)],
-          ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        height: 60,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
           children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF9FBFC1),
+            if (isSelected)
+              Container(
+                width: 6,
+                height: 64,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF6E8F5E), Color(0xFF4E6E3A)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  borderRadius: BorderRadius.horizontal(
+                    left: Radius.circular(3),
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              time,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFFF4F3EF),
+            Expanded(
+              child: Container(
+                height: 64,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: isSelected
+                      ? const BorderRadius.horizontal(
+                          right: Radius.circular(22),
+                        )
+                      : BorderRadius.circular(22),
+                ),
+                padding: const EdgeInsets.only(left: 28, right: 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 18,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFF6E8F5E)
+                            : Colors.transparent,
+                        shape: BoxShape.circle,
+                        border: !isSelected
+                            ? Border.all(
+                                color: const Color(0xFF9A9A8E), width: 2)
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF2C2C25),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF7A7A70),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -455,12 +438,15 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF1B2230), Color(0xFF151B28)],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.14),
+            offset: const Offset(0, 10),
+            blurRadius: 18,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,7 +455,7 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
             'Custom Duration',
             style: TextStyle(
               fontSize: 14,
-              color: Color(0xFF9FBFC1),
+              color: Color(0xFF7A7A70),
             ),
           ),
           const SizedBox(height: 16),
@@ -514,7 +500,7 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
                 'Start Time:',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Color(0xFF9FBFC1),
+                  color: Color(0xFF7A7A70),
                 ),
               ),
               Text(
@@ -522,7 +508,7 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFFF4F3EF),
+                  color: Color(0xFF2C2C25),
                 ),
               ),
             ],
@@ -535,7 +521,7 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
                 'End Time:',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Color(0xFF9FBFC1),
+                  color: Color(0xFF7A7A70),
                 ),
               ),
               Text(
@@ -543,7 +529,7 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFFF4F3EF),
+                  color: Color(0xFF2C2C25),
                 ),
               ),
             ],
@@ -553,276 +539,121 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
     );
   }
 
-  String _formatCustomEndTime() {
-    final now = DateTime.now();
-    final endTime = now.add(
-        Duration(hours: _customDurationHours, minutes: _customDurationMinutes));
-    final hour = endTime.hour.toString().padLeft(2, '0');
-    final minute = endTime.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0F16),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0C0F16),
-        elevation: 0,
-        title: const Text(
-          'Schedule',
-          style: TextStyle(
-            color: Color(0xFFF4F3EF),
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFFFFDF2), Color(0xFFE9E7D8)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF9FBFC1)),
-          onPressed: _isNavigating
-              ? null
-              : () {
-                  if (mounted && !_isNavigating) {
-                    Navigator.pop(context);
-                  }
-                },
-        ),
-        actions: [
-          if (_activeSessionCount > 0)
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1B2230),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.timer, color: Color(0xFF4FA3A5), size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$_activeSessionCount active',
-                    style: const TextStyle(
-                      color: Color(0xFFF4F3EF),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-      body: SafeArea(
         child: Stack(
           children: [
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF0C0F16), Color(0xFF141722)],
-                ),
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _ScheduleLeafPainter(),
               ),
             ),
-            SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Block schedule',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFFF4F3EF),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Choose when focus protection applies',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF9FBFC1),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    _buildScheduleTypeCard(
-                      icon: Icons.timer,
-                      title: 'One-time block',
-                      subtitle: 'Block for a specific period',
-                      isSelected: _scheduleType == ScheduleType.oneTime,
-                      onTap: () {
-                        if (mounted) {
-                          setState(() {
-                            _scheduleType = ScheduleType.oneTime;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _buildScheduleTypeCard(
-                      icon: Icons.repeat,
-                      title: 'Daily schedule',
-                      subtitle: 'Same time every day',
-                      isSelected: _scheduleType == ScheduleType.daily,
-                      onTap: () {
-                        if (mounted) {
-                          setState(() {
-                            _scheduleType = ScheduleType.daily;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _buildScheduleTypeCard(
-                      icon: Icons.calendar_view_week,
-                      title: 'Weekdays only',
-                      subtitle: 'Monday to Friday',
-                      isSelected: _scheduleType == ScheduleType.weekdays,
-                      onTap: () {
-                        if (mounted) {
-                          setState(() {
-                            _scheduleType = ScheduleType.weekdays;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _buildScheduleTypeCard(
-                      icon: Icons.access_time,
-                      title: 'Custom duration',
-                      subtitle: 'Block for a specific duration starting now',
-                      isSelected: _scheduleType == ScheduleType.customDuration,
-                      onTap: () {
-                        if (mounted) {
-                          setState(() {
-                            _scheduleType = ScheduleType.customDuration;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Time range',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFFF4F3EF),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTimeButton(
-                            label: 'Start',
-                            time: _formatTimeOfDay(_startTime),
-                            onTap: _selectStartTime,
+            SafeArea(
+              child: Stack(
+                children: [
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 120),
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.only(left: 24, right: 24, top: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(),
+                          const SizedBox(height: 24),
+                          _buildSubtitle(),
+                          const SizedBox(height: 36),
+                          _buildRhythmLabel(),
+                          const SizedBox(height: 16),
+                          _buildScheduleTypeCard(
+                            title: 'One-time',
+                            subtitle: 'Single session',
+                            isSelected: _scheduleType == ScheduleType.oneTime,
+                            onTap: () {
+                              if (mounted) {
+                                setState(() {
+                                  _scheduleType = ScheduleType.oneTime;
+                                });
+                              }
+                            },
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildTimeButton(
-                            label: 'End',
-                            time: _formatTimeOfDay(_endTime),
-                            onTap: _selectEndTime,
+                          const SizedBox(height: 8),
+                          _buildScheduleTypeCard(
+                            title: 'Daily',
+                            subtitle: 'Repeats every day',
+                            isSelected: _scheduleType == ScheduleType.daily,
+                            onTap: () {
+                              if (mounted) {
+                                setState(() {
+                                  _scheduleType = ScheduleType.daily;
+                                });
+                              }
+                            },
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    if (_scheduleType != ScheduleType.customDuration)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Column(
-                          children: [
-                            const Text(
-                              'Duration',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF9FBFC1),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _formatDuration(_durationMinutes),
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFFF4F3EF),
-                              ),
-                            ),
+                          const SizedBox(height: 8),
+                          _buildScheduleTypeCard(
+                            title: 'Weekdays',
+                            subtitle: 'Mon–Fri',
+                            isSelected: _scheduleType == ScheduleType.weekdays,
+                            onTap: () {
+                              if (mounted) {
+                                setState(() {
+                                  _scheduleType = ScheduleType.weekdays;
+                                });
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          _buildScheduleTypeCard(
+                            title: 'Custom duration',
+                            subtitle: 'Set your own time',
+                            isSelected:
+                                _scheduleType == ScheduleType.customDuration,
+                            onTap: () {
+                              if (mounted) {
+                                setState(() {
+                                  _scheduleType = ScheduleType.customDuration;
+                                });
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 28),
+                          _buildBoundaryLabel(),
+                          const SizedBox(height: 16),
+                          _buildTimeBoundary(),
+                          if (_scheduleType != ScheduleType.customDuration) ...[
+                            const SizedBox(height: 40),
+                            _buildDurationSection(),
                           ],
-                        ),
-                      ),
-                    if (_scheduleType == ScheduleType.customDuration)
-                      _buildCustomDurationInput(),
-                    if (_errorMessage != null) ...[
-                      const SizedBox(height: 20),
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2A1B1B),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        padding: const EdgeInsets.all(14),
-                        child: Text(
-                          _errorMessage!,
-                          style: const TextStyle(
-                            color: Color(0xFFE6B4B4),
-                            fontSize: 13,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Color(0xFF0C0F16)],
-                  ),
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed:
-                        _isSaving || _isNavigating ? null : _saveSchedule,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4FA3A5),
-                      foregroundColor: const Color(0xFF0C0F16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                          if (_scheduleType == ScheduleType.customDuration) ...[
+                            const SizedBox(height: 24),
+                            _buildCustomDurationInput(),
+                          ],
+                          if (_errorMessage != null) ...[
+                            const SizedBox(height: 20),
+                            _buildErrorBanner(),
+                          ],
+                        ],
                       ),
                     ),
-                    child: _isSaving
-                        ? const CircularProgressIndicator(
-                            color: Color(0xFF0C0F16),
-                          )
-                        : const Text(
-                            'Start Focus Session',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
                   ),
-                ),
+                  Positioned(
+                    bottom: 24,
+                    left: 24,
+                    right: 24,
+                    child: _buildCTAButton(),
+                  ),
+                ],
               ),
             ),
           ],
@@ -830,4 +661,291 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
       ),
     );
   }
+
+  Widget _buildHeader() {
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: _isNavigating
+              ? null
+              : () {
+                  if (mounted && !_isNavigating) {
+                    Navigator.pop(context);
+                  }
+                },
+          child: const Text(
+            '‹',
+            style: TextStyle(
+              color: Color(0xFF2C2C25),
+              fontSize: 28,
+            ),
+          ),
+        ),
+        const SizedBox(width: 32),
+        const Text(
+          'Schedule',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF2C2C25),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubtitle() {
+    return const Text(
+      'Decide the shape of this quiet time',
+      style: TextStyle(
+        fontSize: 14,
+        color: Color(0xFF7A7A70),
+      ),
+    );
+  }
+
+  Widget _buildRhythmLabel() {
+    return const Text(
+      'Focus rhythm',
+      style: TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        color: Color(0xFF2C2C25),
+      ),
+    );
+  }
+
+  Widget _buildBoundaryLabel() {
+    return const Text(
+      'Time boundary',
+      style: TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        color: Color(0xFF2C2C25),
+      ),
+    );
+  }
+
+  Widget _buildTimeBoundary() {
+    return Container(
+      width: 312,
+      height: 88,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.14),
+            offset: const Offset(0, 10),
+            blurRadius: 18,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'Start',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF7A7A70),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: _selectStartTime,
+                  child: Text(
+                    _formatTimeOfDay(_startTime),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF2C2C25),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 60,
+            color: const Color(0xFFE0DED6),
+          ),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'End',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF7A7A70),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: _selectEndTime,
+                  child: Text(
+                    _formatTimeOfDay(_endTime),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF2C2C25),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDurationSection() {
+    return Column(
+      children: [
+        const Text(
+          'Duration',
+          style: TextStyle(
+            fontSize: 13,
+            color: Color(0xFF7A7A70),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          _formatDurationHours(_durationMinutes),
+          style: const TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF2C2C25),
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Focus will be held until this ends',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 12,
+            color: Color(0xFF9A9A8E),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorBanner() {
+    return Container(
+      width: double.infinity,
+      height: 44,
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A1B1B),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Center(
+        child: Text(
+          _errorMessage!,
+          style: const TextStyle(
+            color: Color(0xFFE6B4B4),
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCTAButton() {
+    return GestureDetector(
+      onTap: _isSaving || _isNavigating ? null : _saveSchedule,
+      child: Container(
+        width: 216,
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF6E8F5E), Color(0xFF4E6E3A)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.14),
+              offset: const Offset(0, 10),
+              blurRadius: 18,
+            ),
+          ],
+        ),
+        child: Center(
+          child: _isSaving
+              ? const CircularProgressIndicator(
+                  color: Colors.white,
+                )
+              : const Text(
+                  'Begin focus',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ScheduleLeafPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final lightPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFFFFFFFF).withOpacity(0.85),
+          const Color(0xFFFFFFFF).withOpacity(0),
+        ],
+        stops: const [0.0, 1.0],
+      ).createShader(
+        Rect.fromCircle(
+          center: Offset(size.width * 0.3, 0),
+          radius: size.width * 0.7,
+        ),
+      )
+      ..style = PaintingStyle.fill;
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, 260),
+      lightPaint,
+    );
+
+    final leafPaint = Paint()
+      ..color = const Color(0xFF8DA167)
+      ..style = PaintingStyle.fill
+      ..filterQuality = FilterQuality.high;
+
+    final smallLeafPath = Path()
+      ..moveTo(0, 0)
+      ..cubicTo(6, -10, 20, -10, 28, 0)
+      ..cubicTo(20, 6, 6, 6, 0, 0)
+      ..close();
+
+    canvas.save();
+    canvas.translate(60, 160);
+    canvas.scale(1.0);
+    canvas.drawPath(
+        smallLeafPath, leafPaint..color = leafPaint.color.withOpacity(0.16));
+    canvas.restore();
+
+    canvas.save();
+    canvas.translate(280, 220);
+    canvas.scale(1.0);
+    canvas.drawPath(
+        smallLeafPath, leafPaint..color = leafPaint.color.withOpacity(0.16));
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

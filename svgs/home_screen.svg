@@ -2,75 +2,121 @@
      xmlns="http://www.w3.org/2000/svg">
 
   <defs>
-    <!-- Background -->
+    <!-- ================= BACKGROUND ================= -->
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#0C0F16"/>
-      <stop offset="100%" stop-color="#141722"/>
+      <stop offset="0%" stop-color="#FFFDF2"/>
+      <stop offset="100%" stop-color="#E9E7D8"/>
     </linearGradient>
 
-    <!-- Soft center lift -->
-    <radialGradient id="centerLift" cx="50%" cy="45%" r="55%">
-      <stop offset="0%" stop-color="#1C2430" stop-opacity="0.6"/>
-      <stop offset="100%" stop-color="#0C0F16" stop-opacity="0"/>
+    <!-- ================= LIGHT ================= -->
+    <radialGradient id="light" cx="30%" cy="0%" r="70%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- Button gradient -->
-    <linearGradient id="btnGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#3B7F83"/>
-      <stop offset="100%" stop-color="#2F6F73"/>
+    <!-- ================= RIVER ================= -->
+    <linearGradient id="river" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D9F2EC"/>
+      <stop offset="100%" stop-color="#B7DDD4"/>
     </linearGradient>
+
+    <!-- ================= SHADOW ================= -->
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-opacity="0.14"/>
+    </filter>
+
+    <!-- ================= LEAVES ================= -->
+    <path id="leafBig"
+      d="M0,0 C20,-34 70,-34 90,0 C70,20 20,20 0,0 Z"
+      fill="#5F7743"/>
+
+    <path id="leafMid"
+      d="M0,0 C12,-20 40,-20 52,0 C40,12 12,12 0,0 Z"
+      fill="#738B4F"/>
+
+    <path id="leafSmall"
+      d="M0,0 C6,-10 20,-10 28,0 C20,6 6,6 0,0 Z"
+      fill="#8DA167"/>
   </defs>
 
-  <!-- Background -->
+  <!-- ================= BACKGROUND ================= -->
   <rect width="360" height="800" fill="url(#bg)"/>
-  <rect width="360" height="800" fill="url(#centerLift)"/>
+  <rect width="360" height="300" fill="url(#light)"/>
 
-  <!-- App bar -->
-  <text x="24" y="52" fill="#F4F3EF" font-size="20" font-weight="500">
-    Focus Guard
-  </text>
-  <text x="336" y="52" text-anchor="end"
-        fill="#9FBFC1" font-size="22">
-    +
+  <!-- ================= BACKGROUND LEAF DRIFT ================= -->
+  <g opacity="0.18">
+    <use href="#leafSmall" x="40" y="160">
+      <animateTransform type="translate" from="0 0" to="20 80" dur="14s" repeatCount="indefinite"/>
+    </use>
+    <use href="#leafSmall" x="300" y="260">
+      <animateTransform type="translate" from="0 0" to="-30 90" dur="16s" repeatCount="indefinite"/>
+    </use>
+    <use href="#leafMid" x="180" y="100">
+      <animateTransform type="translate" from="0 0" to="10 60" dur="18s" repeatCount="indefinite"/>
+    </use>
+  </g>
+
+  <!-- ================= RIVER ================= -->
+  <path d="M220 -40
+           C260 120 180 260 220 420
+           C260 600 180 760 220 860"
+        stroke="url(#river)"
+        stroke-width="36"
+        fill="none"
+        opacity="0.45"/>
+
+  <!-- ================= HEADER ================= -->
+  <text x="24" y="44" font-size="20" fill="#2C2C25">
+    Vise
   </text>
 
-  <!-- Section header -->
-  <text x="24" y="96" fill="#F4F3EF" font-size="16">
-    Active Sessions
+  <!-- ================= SECTION ================= -->
+  <text x="24" y="92" font-size="16" fill="#2C2C25">
+    Active sessions
   </text>
-  <text x="336" y="96" text-anchor="end"
-        fill="#9FBFC1" font-size="13">
+  <text x="336" y="92" text-anchor="end"
+        font-size="13" fill="#7A7A70">
     0 active
   </text>
 
-  <!-- Empty state icon container -->
-  <g transform="translate(180 300)">
-    <circle r="46" fill="#161C29"/>
-    <circle r="46" fill="none" stroke="#2E3A4A"/>
-    <!-- Minimal crossed-timer icon -->
-    <line x1="-16" y1="-16" x2="16" y2="16"
-          stroke="#6B7C93" stroke-width="2"/>
-    <circle cx="0" cy="0" r="14"
-            stroke="#6B7C93" stroke-width="2" fill="none"/>
+  <!-- ================= EMPTY STATE CARD ================= -->
+  <g filter="url(#shadow)">
+    <rect x="32" y="150" width="296" height="200" rx="32"
+          fill="#FFFFFF"/>
+
+    <circle cx="180" cy="220" r="28" fill="#E6EFE3"/>
+    <circle cx="180" cy="220" r="14"
+            stroke="#6E8F5E" stroke-width="2" fill="none"/>
+
+    <text x="180" y="270" text-anchor="middle"
+          font-size="16" fill="#2C2C25">
+      No focus sessions yet
+    </text>
+
+    <text x="180" y="296" text-anchor="middle"
+          font-size="13" fill="#7A7A70">
+      When you’re ready, begin gently
+    </text>
   </g>
 
-  <!-- Empty state text -->
-  <text x="180" y="380" text-anchor="middle"
-        fill="#F4F3EF" font-size="16">
-    No active sessions
-  </text>
+  <!-- ================= START BUTTON ================= -->
+  <g filter="url(#shadow)">
+    <rect x="72" y="390" width="216" height="52" rx="26"
+          fill="#6E8F5E"/>
+    <text x="180" y="424" text-anchor="middle"
+          font-size="16" fill="#FFFFFF" font-weight="500">
+      Start Session
+    </text>
+  </g>
 
-  <text x="180" y="408" text-anchor="middle"
-        fill="#9FBFC1" font-size="13">
-    Start a focus session when you’re ready
-  </text>
+  <!-- ================= MID + FOREGROUND LEAVES ================= -->
+  <g opacity="0.45">
+    <use href="#leafMid" x="30" y="520" transform="rotate(-12)"/>
+    <use href="#leafMid" x="290" y="580" transform="rotate(18)"/>
+  </g>
 
-  <!-- Primary CTA -->
-  <rect x="110" y="460" width="140" height="48" rx="18"
-        fill="url(#btnGrad)"/>
-  <text x="180" y="492" text-anchor="middle"
-        fill="#0C0F16" font-size="15" font-weight="500">
-    Start Session
-  </text>
+  <g opacity="0.75">
+    <use href="#leafBig" x="-20" y="640" transform="rotate(-18)"/>
+  </g>
 
 </svg>

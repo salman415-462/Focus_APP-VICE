@@ -14,7 +14,7 @@ class FocusModeIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      size: const Size(36, 36),
+      size: const Size(28, 28),
       painter: FocusIconPainter(isEnabled: isEnabled),
     );
   }
@@ -28,12 +28,12 @@ class FocusIconPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = 18.0;
+    final radius = 14.0;
 
     final gradient = RadialGradient(
       colors: isEnabled
-          ? [const Color(0xFF4FA3A5), const Color(0xFF2F6F73)]
-          : [const Color(0xFF1E2433), const Color(0xFF1E2433)],
+          ? [const Color(0xFF6E8F5E), const Color(0xFF4E6E3A)]
+          : [const Color(0xFFD5D4C8), const Color(0xFFD5D4C8)],
     );
 
     final rect = Rect.fromCircle(center: center, radius: radius);
@@ -41,17 +41,6 @@ class FocusIconPainter extends CustomPainter {
       center,
       radius,
       Paint()..shader = gradient.createShader(rect),
-    );
-
-    final linePaint = Paint()
-      ..color = isEnabled ? const Color(0xFF0C0F16) : const Color(0xFF6B7C93)
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawLine(
-      Offset(center.dx - 8, center.dy),
-      Offset(center.dx + 8, center.dy),
-      linePaint,
     );
   }
 
@@ -69,7 +58,7 @@ class PomodoroModeIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      size: const Size(36, 36),
+      size: const Size(28, 28),
       painter: PomodoroIconPainter(isEnabled: isEnabled),
     );
   }
@@ -83,20 +72,20 @@ class PomodoroIconPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = 18.0;
+    final radius = 14.0;
 
     canvas.drawCircle(
       center,
       radius,
       Paint()
-        ..color = isEnabled ? const Color(0xFF2E3A4A) : const Color(0xFF1E2433),
+        ..color = isEnabled ? const Color(0xFFE6EFE3) : const Color(0xFFD5D4C8),
     );
 
     canvas.drawCircle(
       center,
-      10,
+      7,
       Paint()
-        ..color = isEnabled ? const Color(0xFF9FBFC1) : const Color(0xFF6B7C93)
+        ..color = isEnabled ? const Color(0xFF6E8F5E) : const Color(0xFFD5D4C8)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
     );
@@ -116,7 +105,7 @@ class WebsiteModeIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      size: const Size(36, 36),
+      size: const Size(28, 28),
       painter: WebsiteIconPainter(isEnabled: isEnabled),
     );
   }
@@ -130,10 +119,10 @@ class WebsiteIconPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final rect = Rect.fromCenter(center: center, width: 16, height: 12);
+    final rect = Rect.fromCenter(center: center, width: 14, height: 10);
 
     final borderPaint = Paint()
-      ..color = isEnabled ? const Color(0xFF6B7C93) : const Color(0xFF6B7C93)
+      ..color = isEnabled ? const Color(0xFFD5D4C8) : const Color(0xFFD5D4C8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
@@ -157,7 +146,7 @@ class ModeSelectionScreen extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF0C0F16), Color(0xFF141722)],
+            colors: [Color(0xFFFFFDF2), Color(0xFFE9E7D8)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -175,44 +164,44 @@ class ModeSelectionScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeader(context),
-                  const SizedBox(height: 36),
-                  const Padding(
-                    padding: EdgeInsets.only(left: 40),
-                    child: Text(
-                      'How do you want to stay focused?',
+                  const SizedBox(height: 34),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: const Text(
+                      'Select how focus should be held',
                       style: TextStyle(
-                        color: Color(0xFF9FBFC1),
-                        fontSize: 13,
+                        color: Color(0xFF7A7A70),
+                        fontSize: 14,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 28),
                   Expanded(
                     child: ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
                       children: [
                         _buildModeCard(
                           context,
                           icon: const FocusModeIcon(),
-                          title: 'Focus / App Blocking',
-                          subtitle: 'Block selected apps completely',
+                          title: 'App blocking',
+                          subtitle: 'Keep selected apps out of reach',
                           mode: AppMode.focus,
                           isEnabled: true,
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         _buildModeCard(
                           context,
                           icon: const PomodoroModeIcon(),
-                          title: 'Pomodoro',
-                          subtitle: 'Focus sessions with breaks',
+                          title: 'Pomodoro rhythm',
+                          subtitle: 'Work and rest in gentle cycles',
                           mode: AppMode.pomodoro,
                           isEnabled: true,
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         _buildModeCard(
                           context,
                           icon: const WebsiteModeIcon(),
-                          title: 'Website Blocking',
+                          title: 'Website blocking',
                           subtitle: 'Coming soon',
                           mode: AppMode.websiteBlocking,
                           isEnabled: false,
@@ -239,17 +228,17 @@ class ModeSelectionScreen extends StatelessWidget {
             icon: const Text(
               '‹',
               style: TextStyle(
-                color: Color(0xFF9FBFC1),
+                color: Color(0xFF2C2C25),
                 fontSize: 28,
               ),
             ),
           ),
           const Text(
-            'Choose Mode',
+            'Choose mode',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w500,
-              color: Color(0xFFF4F3EF),
+              color: Color(0xFF2C2C25),
             ),
           ),
         ],
@@ -270,34 +259,27 @@ class ModeSelectionScreen extends StatelessWidget {
       child: GestureDetector(
         onTap: isEnabled ? () => _onModeSelected(context, mode) : null,
         child: Container(
-          height: 96,
+          height: 104,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isEnabled
-                  ? [const Color(0xFF1B2230), const Color(0xFF151B28)]
-                  : [const Color(0xFF121726), const Color(0xFF121726)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: isEnabled
-                  ? (mode == AppMode.focus
-                      ? const Color(0xFF2F6F73).withOpacity(0.7)
-                      : const Color(0xFF2E3A4A))
-                  : Colors.transparent,
-              width: 1,
-            ),
+            color: isEnabled ? Colors.white : const Color(0xFFF2F1EA),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.14),
+                blurRadius: 18,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           child: Row(
             children: [
               SizedBox(
-                width: 36,
-                height: 36,
+                width: 28,
+                height: 28,
                 child: icon,
               ),
-              const SizedBox(width: 24),
+              const SizedBox(width: 56),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,8 +291,8 @@ class ModeSelectionScreen extends StatelessWidget {
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                         color: isEnabled
-                            ? const Color(0xFFF4F3EF)
-                            : const Color(0xFF9FBFC1),
+                            ? const Color(0xFF2C2C25)
+                            : const Color(0xFF8B8B80),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -319,8 +301,8 @@ class ModeSelectionScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13,
                         color: isEnabled
-                            ? const Color(0xFF9FBFC1)
-                            : const Color(0xFF6B7C93),
+                            ? const Color(0xFF7A7A70)
+                            : const Color(0xFF9A9A8E),
                       ),
                     ),
                   ],
@@ -331,8 +313,8 @@ class ModeSelectionScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   color: isEnabled
-                      ? const Color(0xFF9FBFC1)
-                      : const Color(0xFF6B7C93),
+                      ? const Color(0xFF7A7A70)
+                      : const Color(0xFF7A7A70),
                 ),
               ),
             ],
@@ -359,22 +341,63 @@ class ModeSelectionScreen extends StatelessWidget {
 class ModeScreenBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height * 0.35);
-    final radius = size.width * 0.6;
-
-    final gradient = RadialGradient(
-      colors: [
-        const Color(0xFF1C2430).withOpacity(0.5),
-        const Color(0xFF0C0F16).withOpacity(0),
-      ],
-    );
-
-    final rect = Rect.fromCircle(center: center, radius: radius);
-    final paint = Paint()
-      ..shader = gradient.createShader(rect)
+    final lightPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFFFFFFFF).withOpacity(0.85),
+          const Color(0xFFFFFFFF).withOpacity(0),
+        ],
+        stops: const [0.0, 1.0],
+      ).createShader(
+        Rect.fromCircle(
+          center: Offset(size.width * 0.3, 0),
+          radius: size.width * 0.7,
+        ),
+      )
       ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(center, radius, paint);
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height * 0.325),
+      lightPaint,
+    );
+
+    final leafSmallPaint = Paint()
+      ..color = const Color(0xFF8DA167)
+      ..style = PaintingStyle.fill;
+
+    void drawLeafSmall(Paint paint, Offset offset, double rotation) {
+      canvas.save();
+      canvas.translate(offset.dx, offset.dy);
+      canvas.rotate(rotation * 3.14159 / 180);
+      final leafPath = Path()
+        ..moveTo(0, 0)
+        ..cubicTo(6, -10, 20, -10, 28, 0)
+        ..cubicTo(20, 6, 6, 6, 0, 0);
+      canvas.drawPath(leafPath, paint);
+      canvas.restore();
+    }
+
+    canvas.save();
+    canvas.translate(20, 70);
+    drawLeafSmall(leafSmallPaint, const Offset(40, 120), 0);
+    canvas.restore();
+
+    canvas.save();
+    canvas.translate(-30, 80);
+    drawLeafSmall(leafSmallPaint, const Offset(300, 180), 0);
+    canvas.restore();
+
+    canvas.save();
+    canvas.rotate(18 * 3.14159 / 180);
+    final foregroundPaint = Paint()
+      ..color = const Color(0xFF738B4F).withOpacity(0.7)
+      ..style = PaintingStyle.fill;
+    final leafMidPath = Path()
+      ..moveTo(280, 540)
+      ..cubicTo(292, 520, 320, 520, 332, 540)
+      ..cubicTo(320, 552, 292, 552, 280, 540);
+    canvas.drawPath(leafMidPath, foregroundPaint);
+    canvas.restore();
   }
 
   @override

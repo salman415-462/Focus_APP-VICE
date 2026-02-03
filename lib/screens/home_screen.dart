@@ -92,7 +92,9 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _activeTimers = timers;
       });
-    } catch (e) {}
+    } catch (e) {
+      // Silently handle timer refresh errors
+    }
   }
 
   String _formatTime(int totalSeconds) {
@@ -143,37 +145,75 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       children: [
         const SizedBox(height: 140),
-        CustomPaint(
-          size: const Size(92, 92),
-          painter: EmptyTimerIconPainter(),
+        Container(
+          width: 296,
+          height: 200,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.14),
+                blurRadius: 18,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE6EFE3),
+                  shape: BoxShape.circle,
+                ),
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Color(0xFF6E8F5E),
+                      width: 2,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+              const Text(
+                'No focus sessions yet',
+                style: TextStyle(
+                  color: Color(0xFF2C2C25),
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'When you\'re ready, begin gently',
+                style: TextStyle(
+                  color: Color(0xFF7A7A70),
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 40),
-        const Text(
-          'No active sessions',
-          style: TextStyle(
-            color: Color(0xFFF4F3EF),
-            fontSize: 16,
-          ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          "Start a focus session when you're ready",
-          style: TextStyle(
-            color: Color(0xFF9FBFC1),
-            fontSize: 13,
-          ),
-        ),
-        const SizedBox(height: 72),
         Container(
-          width: 140,
-          height: 48,
+          width: 216,
+          height: 52,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF3B7F83), Color(0xFF2F6F73)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-            borderRadius: BorderRadius.circular(18),
+            color: const Color(0xFF6E8F5E),
+            borderRadius: BorderRadius.circular(26),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.14),
+                blurRadius: 18,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
           child: ElevatedButton(
             onPressed: _navigateToModeSelection,
@@ -184,8 +224,8 @@ class _HomeScreenState extends State<HomeScreen> {
             child: const Text(
               'Start Session',
               style: TextStyle(
-                color: Color(0xFF0C0F16),
-                fontSize: 15,
+                color: Colors.white,
+                fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -202,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF0C0F16), Color(0xFF141722)],
+            colors: [Color(0xFFFFFDF2), Color(0xFFE9E7D8)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -212,14 +252,14 @@ class _HomeScreenState extends State<HomeScreen> {
             Positioned.fill(
               child: CustomPaint(
                 size: Size.infinite,
-                painter: CenterLiftPainter(),
+                painter: RiverAndLightPainter(),
               ),
             ),
             SafeArea(
               child: _isLoading
                   ? const Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF4FA3A5),
+                        color: Color(0xFF6E8F5E),
                       ),
                     )
                   : Column(
@@ -231,9 +271,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text(
-                                'Focus Guard',
+                                'Vise',
                                 style: TextStyle(
-                                  color: Color(0xFFF4F3EF),
+                                  color: Color(0xFF2C2C25),
                                   fontSize: 20,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -246,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: const Text(
                                       'Stats',
                                       style: TextStyle(
-                                        color: Color(0xFF9FBFC1),
+                                        color: Color(0xFF7A7A70),
                                         fontSize: 14,
                                       ),
                                     ),
@@ -257,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: const Text(
                                       '+',
                                       style: TextStyle(
-                                        color: Color(0xFF9FBFC1),
+                                        color: Color(0xFF7A7A70),
                                         fontSize: 22,
                                       ),
                                     ),
@@ -274,16 +314,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text(
-                                'Active Sessions',
+                                'Active sessions',
                                 style: TextStyle(
-                                  color: Color(0xFFF4F3EF),
+                                  color: Color(0xFF2C2C25),
                                   fontSize: 16,
                                 ),
                               ),
                               Text(
                                 '${_activeTimers.length} active',
                                 style: const TextStyle(
-                                  color: Color(0xFF9FBFC1),
+                                  color: Color(0xFF7A7A70),
                                   fontSize: 13,
                                 ),
                               ),
@@ -326,6 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           )
                         else
                           Expanded(child: _buildEmptyState()),
+                        const SizedBox(height: 80),
                       ],
                     ),
             ),
@@ -347,12 +388,15 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF16213E),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: modeColor.withOpacity(0.3),
-          width: 1,
-        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.14),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -391,7 +435,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 100,
                 height: 100,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF1A1A2E),
+                  color: Colors.white,
                   shape: BoxShape.circle,
                 ),
                 child: Column(
@@ -402,7 +446,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: Color(0xFF2C2C25),
                         fontFeatures: [
                           FontFeature.tabularFigures(),
                         ],
@@ -413,7 +457,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       'REMAINING',
                       style: TextStyle(
                         fontSize: 8,
-                        color: Colors.white54,
+                        color: Color(0xFF7A7A70),
                         letterSpacing: 1.5,
                       ),
                     ),
@@ -428,7 +472,7 @@ class _HomeScreenState extends State<HomeScreen> {
               'Total: ${totalSeconds ~/ 60} min',
               style: const TextStyle(
                 fontSize: 12,
-                color: Colors.white38,
+                color: Color(0xFF7A7A70),
               ),
             ),
           ],
@@ -438,7 +482,7 @@ class _HomeScreenState extends State<HomeScreen> {
               '${blockedPackages.length} app${blockedPackages.length == 1 ? '' : 's'} blocked',
               style: const TextStyle(
                 fontSize: 12,
-                color: Colors.white54,
+                color: Color(0xFF7A7A70),
               ),
             ),
           ],
@@ -448,63 +492,124 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class CenterLiftPainter extends CustomPainter {
+class RiverAndLightPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height * 0.45);
-    final radius = size.width * 0.55;
-
-    final gradient = RadialGradient(
-      colors: [
-        const Color(0xFF1C2430).withOpacity(0.6),
-        const Color(0xFF0C0F16).withOpacity(0),
-      ],
-    );
-
-    final rect = Rect.fromCircle(center: center, radius: radius);
-    final paint = Paint()
-      ..shader = gradient.createShader(rect)
+    final lightPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFFFFFFFF).withOpacity(0.8),
+          const Color(0xFFFFFFFF).withOpacity(0),
+        ],
+        stops: const [0.0, 1.0],
+      ).createShader(
+        Rect.fromCircle(
+          center: Offset(size.width * 0.3, 0),
+          radius: size.width * 0.7,
+        ),
+      )
       ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(center, radius, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class EmptyTimerIconPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = 46.0;
-
-    final circlePaint = Paint()
-      ..color = const Color(0xFF161C29)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius, circlePaint);
-
-    final borderPaint = Paint()
-      ..color = const Color(0xFF2E3A4A)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    canvas.drawCircle(center, radius, borderPaint);
-
-    final linePaint = Paint()
-      ..color = const Color(0xFF6B7C93)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    canvas.drawLine(
-      Offset(center.dx - 16, center.dy - 16),
-      Offset(center.dx + 16, center.dy + 16),
-      linePaint,
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height * 0.4),
+      lightPaint,
     );
 
-    final innerCirclePaint = Paint()
-      ..color = Colors.transparent
+    final riverPaint = Paint()
+      ..color = const Color(0xFFB7DDD4).withOpacity(0.45)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    canvas.drawCircle(center, 14, innerCirclePaint);
+      ..strokeWidth = 36
+      ..strokeCap = StrokeCap.round;
+
+    final riverPath = Path();
+    riverPath.moveTo(size.width * 0.61, -40);
+    riverPath.cubicTo(
+      size.width * 0.72,
+      size.height * 0.15,
+      size.width * 0.50,
+      size.height * 0.325,
+      size.width * 0.61,
+      size.height * 0.525,
+    );
+    riverPath.cubicTo(
+      size.width * 0.72,
+      size.height * 0.75,
+      size.width * 0.50,
+      size.height * 0.95,
+      size.width * 0.61,
+      size.height * 1.075,
+    );
+
+    canvas.drawPath(riverPath, riverPaint);
+
+    final leafMidPaint = Paint()
+      ..color = const Color(0xFF738B4F)
+      ..style = PaintingStyle.fill;
+
+    final leafSmallPaint = Paint()
+      ..color = const Color(0xFF8DA167)
+      ..style = PaintingStyle.fill;
+
+    void drawLeafMid(Paint paint, Offset offset, double rotation) {
+      canvas.save();
+      canvas.translate(offset.dx, offset.dy);
+      canvas.rotate(rotation * 3.14159 / 180);
+      final leafPath = Path()
+        ..moveTo(0, 0)
+        ..cubicTo(12, -20, 40, -20, 52, 0)
+        ..cubicTo(40, 12, 12, 12, 0, 0);
+      canvas.drawPath(leafPath, paint);
+      canvas.restore();
+    }
+
+    void drawLeafSmall(Paint paint, Offset offset, double rotation) {
+      canvas.save();
+      canvas.translate(offset.dx, offset.dy);
+      canvas.rotate(rotation * 3.14159 / 180);
+      final leafPath = Path()
+        ..moveTo(0, 0)
+        ..cubicTo(6, -10, 20, -10, 28, 0)
+        ..cubicTo(20, 6, 6, 6, 0, 0);
+      canvas.drawPath(leafPath, paint);
+      canvas.restore();
+    }
+
+    canvas.save();
+    canvas.translate(20, 80);
+    drawLeafSmall(leafSmallPaint, const Offset(40, 160), 0);
+    drawLeafSmall(leafSmallPaint, const Offset(300, 260), 0);
+    canvas.restore();
+
+    canvas.save();
+    canvas.translate(10, 60);
+    drawLeafMid(leafMidPaint, const Offset(180, 100), 0);
+    canvas.restore();
+
+    final foregroundPaint = Paint()
+      ..color = const Color(0xFF738B4F)
+      ..style = PaintingStyle.fill;
+
+    canvas.save();
+    canvas.rotate(-12 * 3.14159 / 180);
+    drawLeafMid(foregroundPaint, const Offset(30, 520), 0);
+    canvas.restore();
+
+    canvas.save();
+    canvas.rotate(18 * 3.14159 / 180);
+    drawLeafMid(foregroundPaint, const Offset(290, 580), 0);
+    canvas.restore();
+
+    canvas.save();
+    canvas.rotate(-18 * 3.14159 / 180);
+    final bigLeafPaint = Paint()
+      ..color = const Color(0xFF5F7743)
+      ..style = PaintingStyle.fill;
+    final bigLeafPath = Path()
+      ..moveTo(-20, 640)
+      ..cubicTo(0, 606, 50, 606, 70, 640)
+      ..cubicTo(50, 660, 0, 660, -20, 640);
+    canvas.drawPath(bigLeafPath, bigLeafPaint);
+    canvas.restore();
   }
 
   @override

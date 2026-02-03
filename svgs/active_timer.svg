@@ -2,85 +2,146 @@
      xmlns="http://www.w3.org/2000/svg">
 
   <defs>
-    <!-- Background -->
+    <!-- ===== SHADOW ===== -->
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-opacity="0.14"/>
+    </filter>
+
+    <!-- ===== BACKGROUND ===== -->
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#0C0F16"/>
-      <stop offset="100%" stop-color="#141722"/>
+      <stop offset="0%" stop-color="#FFFDF2"/>
+      <stop offset="100%" stop-color="#E9E7D8"/>
     </linearGradient>
 
-    <!-- Focus field -->
-    <radialGradient id="focusField" cx="50%" cy="32%" r="45%">
-      <stop offset="0%" stop-color="#1E2E30" stop-opacity="0.65"/>
-      <stop offset="100%" stop-color="#0C0F16" stop-opacity="0"/>
+    <!-- ===== SUNLIGHT ===== -->
+    <radialGradient id="sun" cx="20%" cy="0%" r="70%">
+      <stop offset="0%" stop-color="#FFF2B0" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#FFF2B0" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- Card -->
-    <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#1B2230"/>
-      <stop offset="100%" stop-color="#151B28"/>
+    <!-- ===== RIVER ===== -->
+    <linearGradient id="river" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D9F2EC"/>
+      <stop offset="100%" stop-color="#B7DDD4"/>
     </linearGradient>
+
+    <!-- ===== ACCENT ===== -->
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6E8F5E"/>
+      <stop offset="100%" stop-color="#4E6E3A"/>
+    </linearGradient>
+
+    <!-- ===== LEAVES ===== -->
+    <path id="leafBig"
+      d="M0,0 C20,-34 70,-34 90,0 C70,20 20,20 0,0 Z"
+      fill="#5F7743"/>
+
+    <path id="leafMid"
+      d="M0,0 C12,-20 40,-20 52,0 C40,12 12,12 0,0 Z"
+      fill="#738B4F"/>
+
+    <path id="leafSmall"
+      d="M0,0 C6,-10 20,-10 28,0 C20,6 6,6 0,0 Z"
+      fill="#8DA167"/>
   </defs>
 
-  <!-- Background -->
+  <!-- ===== BACKGROUND ===== -->
   <rect width="360" height="800" fill="url(#bg)"/>
-  <rect width="360" height="800" fill="url(#focusField)"/>
+  <rect width="360" height="300" fill="url(#sun)"/>
 
-  <!-- App bar -->
-  <text x="24" y="52" fill="#F4F3EF" font-size="20" font-weight="500">
-    Focus Active
+  <!-- ===== ACTIVE SESSION COUNT (NEW) ===== -->
+   <!-- =====  if active then fill should be green else red  ===== -->
+  <g filter="url(#shadow)">
+    <rect x="248" y="24" width="88" height="28" rx="14"
+          fill="#E6EFE3"/>
+    <text x="292" y="43"
+          text-anchor="middle"
+          font-size="13"
+          fill="#4E6E3A"
+          font-weight="500">
+      3 active
+    </text>
+  </g>
+
+  <!-- ===== RIVER (TIME FLOW) ===== -->
+  
+  <path d="M220 -80
+           C260 120 180 260 220 420
+           C260 600 180 760 220 900"
+        stroke="url(#river)"
+        stroke-width="44"
+        fill="none"
+        opacity="0.6">
+    <animate attributeName="stroke-dashoffset"
+             from="0" to="320"
+             dur="18s"
+             repeatCount="indefinite"/>
+  </path>
+
+  <!-- ===== HEADER ===== -->
+  <text x="24" y="44" font-size="18" fill="#2C2C25">
+    Focus in progress
   </text>
 
-  <!-- Primary timer -->
-  <g transform="translate(180 200)">
-    <circle r="54" stroke="#2F6F73" stroke-width="4" fill="none"/>
-    <circle r="36" fill="#2F6F73"/>
-
-    <text y="8" text-anchor="middle"
-          fill="#0C0F16" font-size="14" font-weight="600">
+  <!-- ===== TIMER CARD ===== -->
+  <g filter="url(#shadow)">
+    <rect x="54" y="150" width="258" height="160" rx="32" fill="#FFFDF2"/>
+    <text x="180" y="230"
+          text-anchor="middle"
+          font-size="48"
+          fill="#242420"
+          font-weight="600">
       42:18
     </text>
-  </g>
-
-  <text x="180" y="280" text-anchor="middle"
-        fill="#9FBFC1" font-size="13">
-    Time remaining
-  </text>
-
-  <!-- Divider -->
-  <line x1="24" y1="320" x2="336" y2="320" stroke="#243036"/>
-
-  <!-- Active controls -->
-  <text x="24" y="352" fill="#F4F3EF" font-size="15">
-    Active controls
-  </text>
-
-  <!-- Control item -->
-  <g transform="translate(16 380)">
-    <rect width="328" height="64" rx="18" fill="url(#cardGrad)"/>
-    <circle cx="28" cy="32" r="10" fill="#4FA3A5"/>
-    <text x="56" y="30" fill="#F4F3EF" font-size="14">
-      App Blocking
-    </text>
-    <text x="56" y="48" fill="#9FBFC1" font-size="12">
-      Selected apps restricted
+    <text x="180" y="258"
+          text-anchor="middle"
+          font-size="14"
+          fill="#7A7A70">
+      remaining
     </text>
   </g>
 
-  <!-- Pomodoro example -->
-  <g transform="translate(16 456)">
-    <rect width="328" height="64" rx="18" fill="url(#cardGrad)"/>
-    <circle cx="28" cy="32" r="10" stroke="#9FBFC1" stroke-width="2" fill="none"/>
-    <text x="56" y="30" fill="#F4F3EF" font-size="14">
-      Pomodoro
+  <!-- ===== ACTIVE CONTROLS ===== -->
+   <!-- ===== kindly add logic if check if it is on then this is on else off both for App blocking and Pomodoro rhythm ===== -->
+  
+  <g filter="url(#shadow)">
+    <rect x="48" y="350" width="264" height="176" rx="32" fill="#FFFFFF"/>
+
+    <text x="72" y="392" font-size="15" fill="#2C2C25">
+      Protections active
     </text>
-    <text x="56" y="48" fill="#9FBFC1" font-size="12">
-      Focus interval running
+
+    <text x="72" y="422" font-size="13" fill="#7A7A70">
+      App blocking
+    </text>
+    <text x="260" y="422" text-anchor="end"
+          font-size="13" fill="#4E6E3A">
+      On
+    </text>
+
+    <line x1="72" y1="440" x2="288" y2="440" stroke="#E0DED6"/>
+
+    <text x="72" y="472" font-size="13" fill="#7A7A70">
+      Pomodoro rhythm
+    </text>
+    <text x="260" y="472" text-anchor="end"
+          font-size="13" fill="#4E6E3A">
+      On
     </text>
   </g>
 
-  <!-- Emergency bypass -->
-  <text x="180" y="720" text-anchor="middle"
-        fill="#8B5A5A" font-size="13">
+  <!-- ===== EMERGENCY BYPASS ===== -->
+  <text x="180" y="720"
+        text-anchor="middle"
+        font-size="13"
+        fill="#8B6B6B">
     Emergency bypass
   </text>
+
+  <!-- ===== FOREGROUND LEAVES ===== -->
+  <g opacity="0.8">
+    <use href="#leafBig" x="-30" y="640" transform="rotate(-18)"/>
+    <use href="#leafBig" x="260" y="80" transform="rotate(22)"/>
+  </g>
+
 </svg>

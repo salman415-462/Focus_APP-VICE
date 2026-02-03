@@ -69,6 +69,14 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen>
     });
   }
 
+  void _checkPermissionsWithDelay() {
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (mounted) {
+        _checkPermissionsWithRetry();
+      }
+    });
+  }
+
   Future<void> _checkPermissions() async {
     setState(() {
       _isCheckingPermissions = true;
@@ -108,6 +116,10 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen>
         'Please open Settings > Accessibility and enable Focus Guard.',
       );
     }
+    if (mounted) {
+      _wasInSettings = false;
+      _checkPermissionsWithDelay();
+    }
   }
 
   void _openOverlaySettings() async {
@@ -120,11 +132,19 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen>
         'Please open Settings > Apps > Focus Guard > Permissions and enable "Display over other apps".',
       );
     }
+    if (mounted) {
+      _wasInSettings = false;
+      _checkPermissionsWithDelay();
+    }
   }
 
   void _openAdminSettings() async {
     _wasInSettings = true;
     await MethodChannelService.openDeviceAdminSettings();
+    if (mounted) {
+      _wasInSettings = false;
+      _checkPermissionsWithDelay();
+    }
   }
 
   void _showFallbackHint(String title, String message) {
