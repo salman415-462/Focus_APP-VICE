@@ -1,55 +1,112 @@
-<svg width="360" height="800" viewBox="0 0 360 800" xmlns="http://www.w3.org/2000/svg">
+<svg width="360" height="800" viewBox="0 0 360 800"
+     xmlns="http://www.w3.org/2000/svg">
+
   <defs>
+    <!-- ================= BACKGROUND ================= -->
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#0C0F16"/>
-      <stop offset="100%" stop-color="#141722"/>
+      <stop offset="0%" stop-color="#FFFDF9"/>
+      <stop offset="50%" stop-color="#F7F5ED"/>
+      <stop offset="100%" stop-color="#E9E7D8"/>
     </linearGradient>
 
-    <radialGradient id="focusWell" cx="50%" cy="42%" r="38%">
-      <stop offset="0%" stop-color="#1B2A2D" stop-opacity="0.65"/>
-      <stop offset="100%" stop-color="#0C0F16" stop-opacity="0"/>
+    <!-- ================= SUNLIGHT ================= -->
+    <radialGradient id="sun" cx="25%" cy="15%" r="55%">
+      <stop offset="0%" stop-color="#FFF5C4" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FFF2B0" stop-opacity="0"/>
     </radialGradient>
 
-    <radialGradient id="ambientRing" cx="50%" cy="42%" r="28%">
-      <stop offset="70%" stop-color="#4FA3A5" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="#4FA3A5" stop-opacity="0"/>
-    </radialGradient>
-
-    <!-- LOGO DEFS -->
-    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#1A1F2B"/>
-      <stop offset="100%" stop-color="#0C0F16"/>
+    <!-- ================= RIVER ================= -->
+    <linearGradient id="river" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D9F2EC"/>
+      <stop offset="100%" stop-color="#B7DDD4"/>
     </linearGradient>
 
-    <linearGradient id="panelGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#242A38"/>
-      <stop offset="100%" stop-color="#161B25"/>
-    </linearGradient>
+    <!-- ================= LEAVES ================= -->
+    <path id="leafBig"
+      d="M0,0 C20,-34 70,-34 90,0 C70,20 20,20 0,0 Z"
+      fill="#5F7743"/>
 
-    <linearGradient id="focusFill" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0%" stop-color="#1C2130"/>
-      <stop offset="100%" stop-color="#2A3246"/>
-    </linearGradient>
+    <path id="leafMid"
+      d="M0,0 C12,-20 40,-20 52,0 C40,12 12,12 0,0 Z"
+      fill="#738B4F"/>
 
-    <filter id="softBlur">
-      <feGaussianBlur stdDeviation="2"/>
-    </filter>
+    <path id="leafSmall"
+      d="M0,0 C6,-10 20,-10 28,0 C20,6 6,6 0,0 Z"
+      fill="#8DA167"/>
   </defs>
 
+  <!-- ================= BACKGROUND ================= -->
   <rect width="360" height="800" fill="url(#bg)"/>
-  <rect width="360" height="800" fill="url(#focusWell)"/>
-  <rect width="360" height="800" fill="url(#ambientRing)"/>
+  <rect width="360" height="800" fill="url(#sun)"/>
 
-  <g transform="translate(100 240)">
-    <rect x="16" y="16" width="128" height="128" rx="28" fill="url(#bgGrad)" stroke="#2E3A3D" stroke-opacity="0.6"/>
-    <rect x="48" y="34" width="64" height="92" rx="16" fill="url(#panelGrad)" opacity="0.9"/>
-    <path d="M48 98 Q48 92 54 92 H106 Q112 92 112 98 V124 H48 Z" fill="url(#focusFill)"/>
-    <rect x="60" y="108" width="40" height="3" rx="1.5" fill="#F4F3EF" opacity="0.45"/>
-    <rect x="74" y="30" width="12" height="14" rx="6" fill="#F4F3EF" opacity="0.7" filter="url(#softBlur)"/>
+  <!-- ================= RIVER ================= -->
+  <path d="M210 -80
+           C250 80 170 240 210 400
+           C250 560 170 720 210 880"
+        stroke="url(#river)"
+        stroke-width="40"
+        fill="none"
+        opacity="0.45">
+    <animate attributeName="stroke-dashoffset"
+             from="0" to="260"
+             dur="14s"
+             repeatCount="indefinite"/>
+  </path>
+
+  <!-- ================= LEAVES (BACKGROUND DRIFT) ================= -->
+  <g opacity="0.28">
+    <use href="#leafSmall" x="40" y="120">
+      <animateTransform type="translate" from="0 0" to="30 80" dur="12s" repeatCount="indefinite"/>
+    </use>
+
+    <use href="#leafMid" x="300" y="200">
+      <animateTransform type="translate" from="0 0" to="-40 90" dur="14s" repeatCount="indefinite"/>
+    </use>
+
+    <use href="#leafSmall" x="100" y="320">
+      <animateTransform type="translate" from="0 0" to="20 60" dur="10s" repeatCount="indefinite"/>
+    </use>
   </g>
 
-  <text x="180" y="470" text-anchor="middle" fill="#F4F3EF" font-size="22" font-weight="500">Vise</text>
-  <text x="180" y="504" text-anchor="middle" fill="#A8D5D6" font-size="14">Your focus is protected.</text>
+  <!-- ================= APP NAME ================= -->
+  <text x="180" y="380"
+        text-anchor="middle"
+        font-size="36"
+        fill="#2C2C25"
+        font-weight="500"
+        letter-spacing="0.5">
+    Vise
+  </text>
 
-  <circle cx="180" cy="560" r="16" stroke="#4FA3A5" stroke-width="2" fill="none" stroke-dasharray="42 84" opacity="0.8"/>
+  <!-- ================= NEW IDENTITY LINE ================= -->
+  <text x="180" y="418"
+        text-anchor="middle"
+        font-size="15"
+        fill="#7A7A70">
+    A space for deep attention
+  </text>
+
+  <!-- ================= GROUNDING LINE ================= -->
+  <text x="180" y="456"
+        text-anchor="middle"
+        font-size="13"
+        fill="#9A9A8E">
+    Entering a quiet space
+  </text>
+
+  <!-- ================= FOREGROUND LEAVES ================= -->
+  <g opacity="0.6">
+    <use href="#leafBig" x="-30" y="620" transform="rotate(-18)"/>
+    <use href="#leafBig" x="260" y="80" transform="rotate(22)"/>
+  </g>
+
+  <!-- ================= SOFT LOADING ================= -->
+  <circle cx="180" cy="520" r="10"
+          fill="#4E6E3A" opacity="0.4">
+    <animate attributeName="opacity"
+             from="0.25" to="0.55"
+             dur="2s"
+             repeatCount="indefinite"/>
+  </circle>
+
 </svg>

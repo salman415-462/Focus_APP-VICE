@@ -8,11 +8,47 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _leafController1;
+  late AnimationController _leafController2;
+  late AnimationController _leafController3;
+  late AnimationController _loadingController;
+
   @override
   void initState() {
     super.initState();
+
+    _leafController1 = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 12),
+    )..repeat();
+
+    _leafController2 = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 14),
+    )..repeat();
+
+    _leafController3 = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    )..repeat();
+
+    _loadingController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+
     _navigateToNextScreen();
+  }
+
+  @override
+  void dispose() {
+    _leafController1.dispose();
+    _leafController2.dispose();
+    _leafController3.dispose();
+    _loadingController.dispose();
+    super.dispose();
   }
 
   Future<void> _navigateToNextScreen() async {
@@ -63,158 +99,176 @@ class _SplashScreenState extends State<SplashScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF0C0F16), Color(0xFF141722)],
+            colors: [
+              Color(0xFFFFFDF9),
+              Color(0xFFF7F5ED),
+              Color(0xFFE9E7D8),
+            ],
+            stops: [0.0, 0.5, 1.0],
           ),
         ),
         child: Stack(
           children: [
-            Positioned.fill(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: RadialGradient(
-                    colors: [
-                      Color(0x001B2A2D),
-                      Colors.transparent,
-                    ],
-                    stops: [0.0, 1.0],
-                    center: Alignment(0.5, 0.42),
-                    radius: 0.38,
-                  ),
-                ),
-              ),
-            ),
-            Positioned.fill(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: RadialGradient(
-                    colors: [
-                      Color(0x334FA3A5),
-                      Colors.transparent,
-                    ],
-                    stops: [0.7, 1.0],
-                    center: Alignment(0.5, 0.42),
-                    radius: 0.28,
-                  ),
-                ),
-              ),
-            ),
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildLogo(),
-                  const SizedBox(height: 162),
-                  const Text(
-                    'Vise',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFFF4F3EF),
-                    ),
-                  ),
-                  const SizedBox(height: 34),
-                  const Text(
-                    'Your focus is protected.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFFA8D5D6),
-                    ),
-                  ),
-                  const SizedBox(height: 56),
-                  _buildLoadingIndicator(),
-                ],
-              ),
-            ),
+            _buildSunlight(),
+            _buildRiver(),
+            _buildBackgroundLeaves(),
+            _buildForegroundLeaves(),
+            _buildTextContent(),
+            _buildLoadingIndicator(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLogo() {
-    return Container(
-      width: 160,
-      height: 160,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF1A1F2B), Color(0xFF0C0F16)],
+  Widget _buildSunlight() {
+    return Positioned.fill(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: const Alignment(0.5, -0.7),
+            radius: 1.1,
+            colors: [
+              const Color(0x66FFF5C4),
+              Colors.transparent,
+            ],
+          ),
         ),
       ),
-      child: Stack(
-        alignment: Alignment.center,
+    );
+  }
+
+  Widget _buildRiver() {
+    return CustomPaint(
+      size: Size.infinite,
+      painter: RiverPainter(),
+    );
+  }
+
+  Widget _buildBackgroundLeaves() {
+    return Stack(
+      children: [
+        _buildFloatingLeaf(
+          controller: _leafController1,
+          translate: const Offset(30, 80),
+          duration: const Duration(seconds: 12),
+          child: _buildLeafSmall(const Offset(40, 120)),
+        ),
+        _buildFloatingLeaf(
+          controller: _leafController2,
+          translate: const Offset(-40, 90),
+          duration: const Duration(seconds: 14),
+          child: _buildLeafMid(const Offset(300, 200)),
+        ),
+        _buildFloatingLeaf(
+          controller: _leafController3,
+          translate: const Offset(20, 60),
+          duration: const Duration(seconds: 10),
+          child: _buildLeafSmall(const Offset(100, 320)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFloatingLeaf({
+    required AnimationController controller,
+    required Offset translate,
+    required Duration duration,
+    required Widget child,
+  }) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        final progress = controller.value;
+        final offset = Offset(translate.dx * progress, translate.dy * progress);
+        return Transform.translate(
+          offset: offset,
+          child: child,
+        );
+      },
+    );
+  }
+
+  Widget _buildLeafSmall(Offset position) {
+    return Positioned(
+      left: position.dx,
+      top: position.dy,
+      child: CustomPaint(
+        size: const Size(28, 14),
+        painter: LeafPainter(
+          color: const Color(0x478DA167),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLeafMid(Offset position) {
+    return Positioned(
+      left: position.dx,
+      top: position.dy,
+      child: CustomPaint(
+        size: const Size(52, 26),
+        painter: LeafPainter(
+          color: const Color(0x46738B4F),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForegroundLeaves() {
+    return Stack(
+      children: [
+        _buildLeafBig(const Offset(-30, 620), -18, 0.75),
+        _buildLeafBig(const Offset(260, 80), 22, 0.6),
+      ],
+    );
+  }
+
+  Widget _buildLeafBig(Offset position, double rotation, double opacity) {
+    return Positioned(
+      left: position.dx,
+      top: position.dy,
+      child: Transform.rotate(
+        angle: rotation * 3.14159 / 180,
+        child: CustomPaint(
+          size: const Size(90, 45),
+          painter: LeafPainter(
+            color: const Color(0x605F7743).withOpacity(opacity),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextContent() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Positioned(
-            top: 16,
-            left: 16,
-            child: Container(
-              width: 128,
-              height: 128,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                  color: const Color(0x332E3A3D),
-                ),
-              ),
+          const SizedBox(height: 20),
+          const Text(
+            'Vise',
+            style: TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF2C2C25),
+              letterSpacing: 0.5,
             ),
           ),
-          Positioned(
-            top: 34,
-            left: 48,
-            child: Container(
-              width: 64,
-              height: 92,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                color: const Color(0x33242A38).withOpacity(0.9),
-              ),
+          const SizedBox(height: 38),
+          const Text(
+            'A space for deep attention',
+            style: TextStyle(
+              fontSize: 15,
+              color: Color(0xFF7A7A70),
             ),
           ),
-          Positioned(
-            top: 98,
-            left: 48,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(16),
-              ),
-              child: Container(
-                width: 64,
-                height: 26,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFF2A3246), Color(0xFF1C2130)],
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF4F3EF).withOpacity(0.45),
-                        borderRadius: BorderRadius.circular(1.5),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 30,
-            left: 74,
-            child: Container(
-              width: 12,
-              height: 14,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF4F3EF).withOpacity(0.7),
-                borderRadius: BorderRadius.circular(6),
-              ),
+          const SizedBox(height: 50),
+          const Text(
+            'Entering a quiet space',
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0x662C2C25),
             ),
           ),
         ],
@@ -223,60 +277,102 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Widget _buildLoadingIndicator() {
-    return CustomPaint(
-      size: const Size(32, 32),
-      painter: DashedCirclePainter(
-        color: const Color(0x334FA3A5).withOpacity(0.8),
-        strokeWidth: 2,
-        dashLength: 6,
-        gapLength: 12,
-      ),
+    return AnimatedBuilder(
+      animation: _loadingController,
+      builder: (context, child) {
+        final opacity = 0.35 + (_loadingController.value * 0.25);
+        return Center(
+          child: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: const Color(0xFF4E6E3A).withOpacity(opacity),
+              shape: BoxShape.circle,
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
-class DashedCirclePainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-  final double dashLength;
-  final double gapLength;
-
-  DashedCirclePainter({
-    required this.color,
-    this.strokeWidth = 2,
-    this.dashLength = 6,
-    this.gapLength = 12,
-  });
+class RiverPainter extends CustomPainter {
+  RiverPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
+      ..color = const Color(0x4DD9F2EC)
       ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.butt;
-
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = 16.0;
+      ..strokeWidth = 40
+      ..strokeCap = StrokeCap.butt
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
 
     final path = Path();
-    final circumference = 2 * 3.14159 * radius;
-    final totalDashLength = dashLength + gapLength;
-    final dashCount = circumference / totalDashLength;
+    path.moveTo(size.width * 0.583, -80);
+    path.cubicTo(
+      size.width * 0.694,
+      80,
+      size.width * 0.472,
+      240,
+      size.width * 0.583,
+      400,
+    );
+    path.cubicTo(
+      size.width * 0.694,
+      560,
+      size.width * 0.472,
+      720,
+      size.width * 0.583,
+      size.height + 80,
+    );
 
-    for (int i = 0; i < dashCount.floor(); i++) {
-      final startAngle = (i * totalDashLength / radius);
-      final endAngle = startAngle + (dashLength / radius);
-      path.addArc(
-        Rect.fromCircle(center: center, radius: radius),
-        startAngle,
-        endAngle - startAngle,
-      );
-    }
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    canvas.drawPath(path, paint);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant RiverPainter oldDelegate) => false;
+}
+
+class LeafPainter extends CustomPainter {
+  final Color color;
+
+  LeafPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+
+    final centerX = size.width / 2;
+
+    final path = Path();
+    path.moveTo(centerX, 0);
+    path.cubicTo(
+      centerX + size.width * 0.222,
+      -size.height * 0.756,
+      centerX + size.width * 0.778,
+      -size.height * 0.756,
+      centerX + size.width,
+      0,
+    );
+    path.cubicTo(
+      centerX + size.width * 0.778,
+      size.height * 0.444,
+      centerX + size.width * 0.222,
+      size.height * 0.444,
+      centerX,
+      0,
+    );
+    path.close();
 
     canvas.drawPath(path, paint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant LeafPainter oldDelegate) {
+    return oldDelegate.color != color;
+  }
 }

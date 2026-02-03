@@ -105,6 +105,54 @@ class MethodChannelService {
     }
   }
 
+  static Future<bool> requestEmergencyBypassWithPin(
+      String packageName, String pin) async {
+    try {
+      final result = await _channel.invokeMethod<bool>(
+          'requestEmergencyBypass', {'packageName': packageName, 'pin': pin});
+      return result ?? false;
+    } on PlatformException catch (_) {
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> isBypassPinSet() async {
+    try {
+      final result = await _channel.invokeMethod<bool>('isBypassPinSet');
+      return result ?? false;
+    } on PlatformException catch (_) {
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> setBypassPin(String pin) async {
+    try {
+      final result =
+          await _channel.invokeMethod<bool>('setBypassPin', {'pin': pin});
+      return result ?? false;
+    } on PlatformException catch (_) {
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> verifyBypassPin(String pin) async {
+    try {
+      final result =
+          await _channel.invokeMethod<bool>('verifyBypassPin', {'pin': pin});
+      return result ?? false;
+    } on PlatformException catch (_) {
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Start a one-time focus timer
   /// Returns true only if timer is successfully created and persisted
   static Future<bool> startOneTimeTimer({

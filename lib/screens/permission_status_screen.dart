@@ -132,21 +132,21 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen>
       context: context,
       barrierDismissible: true,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF151B28),
+        backgroundColor: const Color(0xFFFAF8F0),
         title: Text(
           title,
-          style: const TextStyle(color: Color(0xFFF4F3EF)),
+          style: const TextStyle(color: Color(0xFF2C2C25)),
         ),
         content: Text(
           message,
-          style: const TextStyle(color: Color(0xFF9FBFC1)),
+          style: const TextStyle(color: Color(0xFF5F5F55)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text(
               'OK',
-              style: TextStyle(color: Color(0xFF4FA3A5)),
+              style: TextStyle(color: Color(0xFF4E6E3A)),
             ),
           ),
         ],
@@ -154,52 +154,42 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen>
     );
   }
 
-  Widget _buildPermissionTile({
+  Widget _buildPermissionCard({
     required String title,
     required String description,
     required bool isEnabled,
     required VoidCallback onTap,
+    required String statusText,
+    required Color statusColor,
+    required Color indicatorColor,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 88,
+        height: 96,
         decoration: BoxDecoration(
-          color: const Color(0xFF161C29),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isEnabled
-                ? const Color(0xFF2F6F73).withOpacity(0.6)
-                : const Color(0xFF2E3A3D).withOpacity(0.6),
-            width: 1,
-          ),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(26),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0x1A000000),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         child: Row(
           children: [
+            const SizedBox(width: 24),
             Container(
-              width: 36,
-              height: 36,
+              width: 18,
+              height: 18,
               decoration: BoxDecoration(
-                color: isEnabled
-                    ? const Color(0xFF2F6F73)
-                    : const Color(0xFF2F3A3C),
+                color: indicatorColor,
                 shape: BoxShape.circle,
               ),
-              child: Center(
-                child: Text(
-                  isEnabled ? '✓' : '!',
-                  style: TextStyle(
-                    color: isEnabled
-                        ? const Color(0xFF0C0F16)
-                        : const Color(0xFFE36D6D),
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 24),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,30 +198,31 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen>
                   Text(
                     title,
                     style: const TextStyle(
-                      color: Color(0xFFF4F3EF),
+                      color: Color(0xFF2C2C25),
                       fontSize: 15,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
                     style: const TextStyle(
-                      color: Color(0xFF9FBFC1),
-                      fontSize: 13,
+                      color: Color(0xFF7A7A70),
+                      fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
             Text(
-              isEnabled ? 'Enabled' : 'Enable',
+              statusText,
               style: TextStyle(
-                color: isEnabled
-                    ? const Color(0xFF8FD6D6)
-                    : const Color(0xFF4FA3A5),
+                color: statusColor,
                 fontSize: 13,
+                fontWeight: FontWeight.w500,
               ),
             ),
+            const SizedBox(width: 24),
           ],
         ),
       ),
@@ -241,175 +232,242 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF0C0F16), Color(0xFF141722)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFFFFDF2),
+              Color(0xFFE9E7D8),
+            ],
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Container(
-                height: 120,
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF141A26), Color(0xFF0C0F16)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 32),
-                    const Padding(
-                      padding: EdgeInsets.only(left: 24),
-                      child: Text(
-                        'Permissions',
-                        style: TextStyle(
-                          color: Color(0xFFF4F3EF),
-                          fontSize: 20,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 26),
-                    const Padding(
-                      padding: EdgeInsets.only(left: 24),
-                      child: Text(
-                        'Required to protect your focus',
-                        style: TextStyle(
-                          color: Color(0xFF9FBFC1),
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Padding(
-                padding: EdgeInsets.only(left: 24),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Required permissions',
-                    style: TextStyle(
-                      color: Color(0xFFF4F3EF),
-                      fontSize: 16,
-                    ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0.5, -0.8),
+                    radius: 1.8,
+                    colors: [
+                      const Color(0xB3FFFFFF),
+                      Colors.transparent,
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
-              if (_hasError) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4D1A1A),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.warning, color: Color(0xFFCF6679)),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Could not check permissions. Assuming disabled.',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ],
+            ),
+            _buildDecorativeLeaves(),
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 52),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 24),
+                    child: Text(
+                      'Almost ready',
+                      style: TextStyle(
+                        color: Color(0xFF2C2C25),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-              ],
-              _isCheckingPermissions
-                  ? const Expanded(
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF4FA3A5),
+                  const SizedBox(height: 26),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 24),
+                    child: Text(
+                      'This helps keep distractions away.',
+                      style: TextStyle(
+                        color: Color(0xFF7A7A70),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 88),
+                  if (_hasError)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFAEBEB),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.warning, color: Color(0xFFD32F2F)),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Could not check permissions. Assuming disabled.',
+                                style: TextStyle(color: Color(0xFF5C5555)),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    )
-                  : Expanded(
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: _buildPermissionTile(
-                              title: 'Accessibility Service',
-                              description: 'Detects and blocks distractions',
-                              isEnabled: _accessibilityEnabled,
-                              onTap: _openAccessibilitySettings,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: _buildPermissionTile(
-                              title: 'Overlay permission',
-                              description: 'Shows focus protection',
-                              isEnabled: _overlayEnabled,
-                              onTap: _openOverlaySettings,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: _buildPermissionTile(
-                              title: 'Device admin',
-                              description: 'Prevents disabling protection',
-                              isEnabled: _adminEnabled,
-                              onTap: _openAdminSettings,
-                            ),
-                          ),
-                          const Spacer(),
-                          Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: SizedBox(
-                              width: double.infinity,
-                              height: 48,
-                              child: ElevatedButton(
-                                onPressed: _isCheckingPermissions
-                                    ? null
-                                    : () {
-                                        if (_allPermissionsEnabled) {
-                                          Navigator.pushReplacementNamed(
-                                              context, '/home');
-                                        } else {
-                                          _showPermissionWarning();
-                                        }
-                                      },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF2F6F73),
-                                  foregroundColor: const Color(0xFF0C0F16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Continue',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                    ),
+                  if (_hasError) const SizedBox(height: 16),
+                  _isCheckingPermissions
+                      ? Expanded(
+                          child: Center(
+                            child: Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: const Color(0x4D6E8F5E),
+                                shape: BoxShape.circle,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
+                        )
+                      : Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Column(
+                              children: [
+                                _buildPermissionCard(
+                                  title: 'Awareness',
+                                  description: 'Notices app switches',
+                                  isEnabled: _accessibilityEnabled,
+                                  onTap: _openAccessibilitySettings,
+                                  statusText: 'Allow',
+                                  statusColor: const Color(0xFF6E8F5E),
+                                  indicatorColor: const Color(0xFFE6EFE3),
+                                ),
+                                const SizedBox(height: 20),
+                                _buildPermissionCard(
+                                  title: 'Overlays',
+                                  description: 'Shows block screen',
+                                  isEnabled: _overlayEnabled,
+                                  onTap: _openOverlaySettings,
+                                  statusText: 'On',
+                                  statusColor: const Color(0xFF4E6E3A),
+                                  indicatorColor: const Color(0xFF6E8F5E),
+                                ),
+                                const SizedBox(height: 20),
+                                _buildPermissionCard(
+                                  title: 'Protection',
+                                  description: 'Prevents shutdown',
+                                  isEnabled: _adminEnabled,
+                                  onTap: _openAdminSettings,
+                                  statusText: 'On',
+                                  statusColor: const Color(0xFF4E6E3A),
+                                  indicatorColor: const Color(0xFF6E8F5E),
+                                ),
+                                const Spacer(),
+                                _buildContinueButton(),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                        ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDecorativeLeaves() {
+    return Stack(
+      children: [
+        Positioned(
+          right: 20,
+          top: 70,
+          child: Transform.rotate(
+            angle: 18 * 3.14159 / 180,
+            child: CustomPaint(
+              size: const Size(90, 45),
+              painter: LeafPainter(color: const Color(0x385F7743)),
+            ),
+          ),
+        ),
+        Positioned(
+          left: -20,
+          bottom: 180,
+          child: Transform.rotate(
+            angle: -18 * 3.14159 / 180,
+            child: CustomPaint(
+              size: const Size(90, 45),
+              painter: LeafPainter(color: const Color(0x385F7743)),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 40,
+          top: 140,
+          child: CustomPaint(
+            size: const Size(28, 14),
+            painter: LeafPainter(color: const Color(0x388DA167)),
+          ),
+        ),
+        Positioned(
+          right: 20,
+          top: 240,
+          child: CustomPaint(
+            size: const Size(28, 14),
+            painter: LeafPainter(color: const Color(0x388DA167)),
+          ),
+        ),
+        Positioned(
+          left: 180,
+          top: 520,
+          child: CustomPaint(
+            size: const Size(28, 14),
+            painter: LeafPainter(color: const Color(0x388DA167)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContinueButton() {
+    return GestureDetector(
+      onTap: _isCheckingPermissions
+          ? null
+          : () {
+              if (_allPermissionsEnabled) {
+                Navigator.pushReplacementNamed(context, '/home');
+              } else {
+                _showPermissionWarning();
+              }
+            },
+      child: Container(
+        width: 216,
+        height: 52,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(26),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF6E8F5E),
+              Color(0xFF4E6E3A),
             ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0x1A000000),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: const Center(
+          child: Text(
+            'Continue',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ),
@@ -421,25 +479,65 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen>
       context: context,
       barrierDismissible: true,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF151B28),
+        backgroundColor: const Color(0xFFFAF8F0),
         title: const Text(
           'Permissions Required',
-          style: TextStyle(color: Color(0xFFF4F3EF)),
+          style: TextStyle(color: Color(0xFF2C2C25)),
         ),
         content: const Text(
           'All permissions must be enabled before you can continue. Please enable the missing permissions above.',
-          style: TextStyle(color: Color(0xFF9FBFC1)),
+          style: TextStyle(color: Color(0xFF5F5F55)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text(
               'OK',
-              style: TextStyle(color: Color(0xFF4FA3A5)),
+              style: TextStyle(color: Color(0xFF4E6E3A)),
             ),
           ),
         ],
       ),
     );
+  }
+}
+
+class LeafPainter extends CustomPainter {
+  final Color color;
+
+  LeafPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+
+    final centerX = size.width / 2;
+
+    final path = Path();
+    path.moveTo(centerX, 0);
+    path.cubicTo(
+      centerX + size.width * 0.222,
+      -size.height * 0.756,
+      centerX + size.width * 0.778,
+      -size.height * 0.756,
+      centerX + size.width,
+      0,
+    );
+    path.cubicTo(
+      centerX + size.width * 0.778,
+      size.height * 0.444,
+      centerX + size.width * 0.222,
+      size.height * 0.444,
+      centerX,
+      0,
+    );
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant LeafPainter oldDelegate) {
+    return oldDelegate.color != color;
   }
 }

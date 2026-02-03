@@ -32,6 +32,10 @@ class MethodChannelHandler(private val context: Context) {
         BlockRepository(LocalBlockStore(context))
     }
 
+    private val securePinManager: SecurePinManager by lazy {
+        SecurePinManager(context)
+    }
+
     private val excludedPackages: Set<String> by lazy {
         setOf(
             context.packageName,
@@ -85,10 +89,11 @@ class MethodChannelHandler(private val context: Context) {
                 }
                 "requestEmergencyBypass" -> {
                     val packageName = call.argument<String>("packageName")
+                    val pin = call.argument<String>("pin")
                     if (packageName == null) {
                         result.success(false)
                     } else {
-                        requestEmergencyBypass(packageName, result)
+                        requestEmergencyBypass(packageName, pin, result)
                     }
                 }
                 "startOneTimeTimer" -> {
@@ -136,6 +141,23 @@ class MethodChannelHandler(private val context: Context) {
                 }
                 "isOnboardingComplete" -> isOnboardingComplete(result)
                 "setOnboardingComplete" -> setOnboardingComplete(result)
+                "isBypassPinSet" -> isBypassPinSet(result)
+                "setBypassPin" -> {
+                    val pin = call.argument<String>("pin")
+                    if (pin == null) {
+                        result.success(false)
+                    } else {
+                        setBypassPin(pin, result)
+                    }
+                }
+                "verifyBypassPin" -> {
+                    val pin = call.argument<String>("pin")
+                    if (pin == null) {
+                        result.success(false)
+                    } else {
+                        verifyBypassPin(pin, result)
+                    }
+                }
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {
@@ -462,10 +484,20 @@ class MethodChannelHandler(private val context: Context) {
         }
     }
 
-    private fun requestEmergencyBypass(packageName: String, result: MethodChannel.Result) {
+    private fun requestEmergencyBypass(packageName: String, pin: String?, result: MethodChannel.Result) {
         if (packageName.isBlank()) {
             result.success(false)
             return
+        }
+
+        // PIN gate: Check if PIN is set and verify it
+        if (securePinManager.isPinSet()) {
+            // PIN is set, verify it
+            if (pin == null || !securePinManager.verifyPin(pin)) {
+                Log.d("MethodChannelHandler", "PIN verification failed for bypass request")
+                result.success(false)
+                return
+            }
         }
 
         val currentTimeMillis = System.currentTimeMillis()
@@ -709,6 +741,23 @@ class MethodChannelHandler(private val context: Context) {
         } catch (e: Exception) {
             result.error("OPEN_FAILED", "Could not open device admin settings: ${e.message}", null)
         }
+    }
+
+    // PIN Management Methods
+
+    private fun isBypassPinSet(result: MethodChannel.Result) {
+        val isSet = securePinManager.isPinSet()
+        result.success(isSet)
+    }
+
+    private fun setBypassPin(pin: String, result: MethodChannel.Result) {
+        val success = securePinManager.setPin(pin)
+        result.success(success)
+    }
+
+    private fun verifyBypassPin(pin: String, result: MethodChannel.Result) {
+        val isValid = securePinManager.verifyPin(pin)
+        result.success(isValid)
     }
 }
 
