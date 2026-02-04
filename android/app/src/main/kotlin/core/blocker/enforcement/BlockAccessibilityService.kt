@@ -82,18 +82,18 @@ class BlockAccessibilityService : AccessibilityService() {
         // DEBUG: Log event received
         Log.d(TAG, "DEBUG: onAccessibilityEvent pkg=$packageName suppressed=$blockSuppressed enforced=$hasEnforcedSinceLastHome")
 
-        // Home detection: only clear suppression, do NOT remove overlay
+        // Home detection: clear suppression state but track enforcement separately
         val homePackage = getHomePackageName()
         if (packageName == homePackage) {
-            // Clear suppression and reset enforcement flag when Home is detected
-            blockSuppressed = true
-            hasEnforcedSinceLastHome = false
-            Log.d(TAG, "DEBUG: Home detected, suppression reset")
+            // When Home detected - clear suppression to allow next block attempt
+            // but don't reset hasEnforcedSinceLastHome (we want to know if we've blocked)
+            blockSuppressed = false
+            Log.d(TAG, "DEBUG: Home detected, suppression cleared")
             return
         }
 
         // If suppression is active AND we've already enforced once, skip all processing
-        // This guarantees first blocked app always runs, repeated spam is suppressed
+        // This prevents multiple overlays in quick succession
         if (blockSuppressed && hasEnforcedSinceLastHome) {
             Log.d(TAG, "DEBUG: Suppression active, skipping enforcement")
             return
@@ -202,11 +202,8 @@ class BlockAccessibilityService : AccessibilityService() {
     private fun enforceBlock(packageName: String, blockingTimer: ActiveTimer?) {
         Log.d(TAG, "BLOCK detected for $packageName - overlay requested")
 
-        // Consume timer if this was a timer-based block
-        if (blockingTimer != null) {
-            Log.d(TAG, "DEBUG: Consuming timer ${blockingTimer.id} for $packageName")
-            repository.clearActiveTimer(blockingTimer.id)
-        }
+        // Note: Timer is NOT consumed on block enforcement
+        // Timer remains active and will block on every app attempt until it naturally expires
 
         // Mark that enforcement has happened since last Home
         hasEnforcedSinceLastHome = true
