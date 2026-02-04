@@ -177,6 +177,10 @@ class MethodChannelHandler(private val context: Context) {
         val accessibilityEnabled = isAccessibilityServiceEnabled()
         Log.d("MethodChannelHandler", "Accessibility enabled: $accessibilityEnabled")
 
+        // Check if the service is actually running (not just enabled)
+        val serviceRunning = BlockAccessibilityService.isServiceConnected(context)
+        Log.d("MethodChannelHandler", "Accessibility service running: $serviceRunning")
+
         val overlayEnabled = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Settings.canDrawOverlays(context)
         } else {
@@ -197,6 +201,7 @@ class MethodChannelHandler(private val context: Context) {
 
         val status = mapOf(
             "accessibility_enabled" to accessibilityEnabled,
+            "service_running" to serviceRunning,
             "overlay_enabled" to overlayEnabled,
             "device_admin_enabled" to adminEnabled,
             "is_block_active" to isBlockActive,
@@ -236,13 +241,9 @@ class MethodChannelHandler(private val context: Context) {
             serviceComponentName == expectedComponentName
         }
 
-        // MIUI FIX: Accessibility is only considered enabled if both enabled in settings AND connected
-        val isConnected = core.blocker.enforcement.BlockAccessibilityService.isServiceConnected(context)
-        val finalResult = isEnabled && isConnected
+        Log.d("MethodChannelHandler", "isAccessibilityServiceEnabled: $isEnabled")
 
-        Log.d("MethodChannelHandler", "isAccessibilityServiceEnabled: Enabled: $isEnabled, Connected: $isConnected, Final result: $finalResult")
-
-        return finalResult
+        return isEnabled
     }
 
     /// Check if the accessibility service is actually running (not just enabled)
@@ -760,4 +761,5 @@ class MethodChannelHandler(private val context: Context) {
         result.success(isValid)
     }
 }
+
 

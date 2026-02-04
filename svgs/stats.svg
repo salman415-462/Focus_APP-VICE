@@ -1,0 +1,153 @@
+<svg width="360" height="800" viewBox="0 0 360 800"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <!-- SHADOW -->
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-opacity="0.12"/>
+    </filter>
+
+    <!-- ATMOSPHERE (SAME FAMILY AS OTHERS) -->
+    <linearGradient id="atmosphere" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF2C8"/>
+      <stop offset="30%" stop-color="#FFFDF2"/>
+      <stop offset="65%" stop-color="#F3F2E8"/>
+      <stop offset="100%" stop-color="#E9E7D8"/>
+    </linearGradient>
+
+    <!-- CARD -->
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F6F5EC"/>
+    </linearGradient>
+
+    <!-- FLOW (VERY SUBTLE) -->
+    <linearGradient id="flow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E3F1EA"/>
+      <stop offset="100%" stop-color="#CFE6DC"/>
+    </linearGradient>
+
+    <!-- LEAVES -->
+    <path id="leafBig"
+      d="M0,0 C20,-34 70,-34 90,0 C70,20 20,20 0,0 Z"
+      fill="#5F7743" opacity="0.22"/>
+
+    <path id="leafSmall"
+      d="M0,0 C6,-10 20,-10 28,0 C20,6 6,6 0,0 Z"
+      fill="#8DA167" opacity="0.22"/>
+  </defs>
+
+  <!-- BACKGROUND -->
+  <rect width="360" height="800" fill="url(#atmosphere)"/>
+
+  <!-- SUBTLE FLOW COLUMN -->
+  <path d="M210 -80
+           C250 120 170 260 210 420
+           C250 600 170 760 210 900"
+        stroke="url(#flow)"
+        stroke-width="42"
+        fill="none"
+        opacity="0.35"/>
+
+  <!-- LEAVES -->
+  <use href="#leafBig" x="260" y="64" transform="rotate(18)"/>
+  <use href="#leafBig" x="-30" y="640" transform="rotate(-18)"/>
+  <use href="#leafSmall" x="44" y="152"/>
+  <use href="#leafSmall" x="300" y="272"/>
+  <use href="#leafSmall" x="180" y="520"/>
+
+  <!-- HEADER -->
+  <text x="24" y="44" font-size="20" fill="#2C2C25">
+    Stats
+  </text>
+  <text x="24" y="66" font-size="12" fill="#8B8B80">
+    A quiet snapshot
+  </text>
+
+  <!-- RIGHT NOW -->
+  <text x="24" y="104" font-size="14" fill="#7A7A70">
+    Right now
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="24" y="120" width="312" height="92" rx="26"
+          fill="url(#card)"/>
+
+    <text x="48" y="158" font-size="14" fill="#7A7A70">
+      Active sessions
+    </text>
+    <text x="312" y="158" text-anchor="end"
+          font-size="14" fill="#2C2C25">
+      None
+    </text>
+
+    <text x="48" y="182" font-size="14" fill="#7A7A70">
+      Active mode
+    </text>
+    <text x="312" y="182" text-anchor="end"
+          font-size="14" fill="#2C2C25">
+      None
+    </text>
+  </g>
+
+  <!-- TODAY -->
+  <text x="24" y="244" font-size="14" fill="#7A7A70">
+    Today
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="24" y="260" width="312" height="132" rx="26"
+          fill="url(#card)"/>
+
+    <text x="48" y="300" font-size="14" fill="#7A7A70">
+      Focus time
+    </text>
+    <text x="312" y="300" text-anchor="end"
+          font-size="14" fill="#2C2C25">
+      0m
+    </text>
+
+    <text x="48" y="326" font-size="14" fill="#7A7A70">
+      Remaining
+    </text>
+    <text x="312" y="326" text-anchor="end"
+          font-size="14" fill="#2C2C25">
+      0m
+    </text>
+
+    <text x="48" y="352" font-size="14" fill="#7A7A70">
+      Sessions started
+    </text>
+    <text x="312" y="352" text-anchor="end"
+          font-size="14" fill="#2C2C25">
+      0
+    </text>
+  </g>
+
+  <!-- SYSTEM STATE -->
+  <text x="24" y="424" font-size="14" fill="#7A7A70">
+    System state
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="24" y="440" width="312" height="96" rx="26"
+          fill="url(#card)"/>
+
+    <text x="48" y="476" font-size="14" fill="#7A7A70">
+      Blocking active
+    </text>
+    <text x="312" y="476" text-anchor="end"
+          font-size="14" fill="#2C2C25">
+      No
+    </text>
+
+    <text x="48" y="504" font-size="14" fill="#7A7A70">
+      Emergency bypass
+    </text>
+    <text x="312" y="504" text-anchor="end"
+          font-size="14" fill="#2C2C25">
+      No
+    </text>
+  </g>
+
+</svg>

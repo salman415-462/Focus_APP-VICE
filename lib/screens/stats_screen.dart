@@ -63,7 +63,6 @@ class _StatsScreenState extends State<StatsScreen> {
     for (final timer in _activeTimers) {
       final mode = timer['mode'] as String? ?? 'FOCUS';
       final durationMinutes = timer['durationMinutes'] as int? ?? 0;
-      // Only count focus modes, not breaks
       if (mode == 'FOCUS' || mode == 'POMODORO_FOCUS') {
         totalMinutes += durationMinutes;
       }
@@ -76,7 +75,6 @@ class _StatsScreenState extends State<StatsScreen> {
     for (final timer in _activeTimers) {
       final mode = timer['mode'] as String? ?? 'FOCUS';
       final remainingSeconds = timer['remainingSeconds'] as int? ?? 0;
-      // Only count focus modes, not breaks
       if (mode == 'FOCUS' || mode == 'POMODORO_FOCUS') {
         totalMinutes += (remainingSeconds / 60).round();
       }
@@ -102,59 +100,94 @@ class _StatsScreenState extends State<StatsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF0C0F16), Color(0xFF141722)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFFFF2C8),
+              Color(0xFFFFFDF2),
+              Color(0xFFF3F2E8),
+              Color(0xFFE9E7D8),
+            ],
+            stops: [0.0, 0.30, 0.65, 1.0],
           ),
         ),
         child: Stack(
           children: [
             Positioned.fill(
               child: CustomPaint(
-                size: Size.infinite,
-                painter: StatsScreenBackgroundPainter(),
+                painter: FlowPainter(),
+              ),
+            ),
+            Positioned.fill(
+              child: CustomPaint(
+                painter: StatsLeavesPainter(),
               ),
             ),
             SafeArea(
-              child: Column(
-                children: [
-                  _buildHeader(),
-                  const SizedBox(height: 32),
-                  if (_isLoading)
-                    const Expanded(
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF4FA3A5),
+              child: SizedBox(
+                width: double.infinity,
+                child: _isLoading
+                    ? Center(
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: const Color(0x4D6E8F5E),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const CircularProgressIndicator(
+                            color: Color(0xFF6E8F5E),
+                            strokeWidth: 2,
+                          ),
                         ),
-                      ),
-                    )
-                  else
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                      )
+                    : SingleChildScrollView(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            const SizedBox(height: 44),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 24),
+                              child: Text(
+                                'Stats',
+                                style: TextStyle(
+                                  color: Color(0xFF2C2C25),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 22),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 24),
+                              child: Text(
+                                'A quiet snapshot',
+                                style: TextStyle(
+                                  color: Color(0xFF8B8B80),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 38),
                             _buildSectionTitle('Right Now'),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 16),
                             _buildRightNowCard(),
                             const SizedBox(height: 32),
-                            _buildSectionTitle('Today'),
-                            const SizedBox(height: 12),
+                            _buildTodayTitle(),
+                            const SizedBox(height: 16),
                             _buildTodayCard(),
                             const SizedBox(height: 32),
-                            _buildSectionTitle('System Status'),
-                            const SizedBox(height: 12),
-                            _buildSystemStatusCard(),
+                            _buildSystemStateTitle(),
+                            const SizedBox(height: 16),
+                            _buildSystemStateCard(),
                           ],
                         ),
                       ),
-                    ),
-                ],
               ),
             ),
           ],
@@ -163,42 +196,41 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(left: 8, right: 24, top: 12),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Text(
-              '‹',
-              style: TextStyle(
-                color: Color(0xFF9FBFC1),
-                fontSize: 28,
-              ),
-            ),
-          ),
-          const Text(
-            'Stats',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFFF4F3EF),
-            ),
-          ),
-        ],
+      padding: const EdgeInsets.only(left: 24),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: Color(0xFF7A7A70),
+          fontSize: 14,
+        ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: Color(0xFF9FBFC1),
-        letterSpacing: 0.5,
+  Widget _buildTodayTitle() {
+    return const Padding(
+      padding: EdgeInsets.only(left: 24),
+      child: Text(
+        'Today',
+        style: TextStyle(
+          color: Color(0xFF7A7A70),
+          fontSize: 14,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSystemStateTitle() {
+    return const Padding(
+      padding: EdgeInsets.only(left: 24),
+      child: Text(
+        'System state',
+        style: TextStyle(
+          color: Color(0xFF7A7A70),
+          fontSize: 14,
+        ),
       ),
     );
   }
@@ -208,18 +240,76 @@ class _StatsScreenState extends State<StatsScreen> {
     final activeModesText =
         activeModes.isEmpty ? 'None' : activeModes.join(' / ');
 
-    return _buildInfoCard(
-      children: [
-        _buildInfoRow(
-          label: 'Active sessions',
-          value: _activeTimers.isEmpty ? 'None' : '${_activeTimers.length}',
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        width: 312,
+        height: 92,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(26),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFFFFFFF), Color(0xFFF6F5EC)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0x1A000000),
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
-        _buildInfoRow(
-          label: 'Active modes',
-          value: activeModesText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 24, top: 38),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    'Active sessions',
+                    style: TextStyle(
+                      color: Color(0xFF7A7A70),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    _activeTimers.isEmpty ? 'None' : '${_activeTimers.length}',
+                    style: const TextStyle(
+                      color: Color(0xFF2C2C25),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                ],
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  const Text(
+                    'Active mode',
+                    style: TextStyle(
+                      color: Color(0xFF7A7A70),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    activeModesText,
+                    style: const TextStyle(
+                      color: Color(0xFF2C2C25),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                ],
+              ),
+              const Spacer(),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 
@@ -228,116 +318,243 @@ class _StatsScreenState extends State<StatsScreen> {
     final remainingFocusMinutes = _calculateRemainingFocusMinutes();
     final sessionsStarted = _activeTimers.length;
 
-    return _buildInfoCard(
-      children: [
-        _buildInfoRow(
-          label: 'Focus time (total)',
-          value: _formatMinutes(totalFocusMinutes),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        width: 312,
+        height: 132,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(26),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFFFFFFF), Color(0xFFF6F5EC)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0x1A000000),
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
-        _buildInfoRow(
-          label: 'Focus time (remaining)',
-          value: _formatMinutes(remainingFocusMinutes),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 24, top: 40),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    'Focus time',
+                    style: TextStyle(
+                      color: Color(0xFF7A7A70),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    _formatMinutes(totalFocusMinutes),
+                    style: const TextStyle(
+                      color: Color(0xFF2C2C25),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                ],
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  const Text(
+                    'Remaining',
+                    style: TextStyle(
+                      color: Color(0xFF7A7A70),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    _formatMinutes(remainingFocusMinutes),
+                    style: const TextStyle(
+                      color: Color(0xFF2C2C25),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                ],
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  const Text(
+                    'Sessions started',
+                    style: TextStyle(
+                      color: Color(0xFF7A7A70),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '$sessionsStarted',
+                    style: const TextStyle(
+                      color: Color(0xFF2C2C25),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                ],
+              ),
+              const Spacer(),
+            ],
+          ),
         ),
-        const SizedBox(height: 16),
-        _buildInfoRow(
-          label: 'Sessions started',
-          value: '$sessionsStarted',
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildSystemStatusCard() {
+  Widget _buildSystemStateCard() {
     final isBlocking = _blockStatus['isBlockActive'] as bool? ?? false;
     final bypassActive = _blockStatus['bypassActive'] as bool? ?? false;
 
-    return _buildInfoCard(
-      children: [
-        _buildInfoRow(
-          label: 'Blocking active',
-          value: isBlocking ? 'Yes' : 'No',
-          valueColor: isBlocking ? const Color(0xFF4FA3A5) : null,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        width: 312,
+        height: 96,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(26),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFFFFFFF), Color(0xFFF6F5EC)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0x1A000000),
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
-        _buildInfoRow(
-          label: 'Emergency bypass',
-          value: bypassActive ? 'Yes' : 'No',
-          valueColor: bypassActive ? const Color(0xFFE53935) : null,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoCard({required List<Widget> children}) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF1B2230), Color(0xFF151B28)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF2E3A4A),
-          width: 1,
-        ),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: children,
-      ),
-    );
-  }
-
-  Widget _buildInfoRow({
-    required String label,
-    required String value,
-    Color? valueColor,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Color(0xFF9FBFC1),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 24, top: 36),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    'Blocking active',
+                    style: TextStyle(
+                      color: Color(0xFF7A7A70),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    isBlocking ? 'Yes' : 'No',
+                    style: const TextStyle(
+                      color: Color(0xFF2C2C25),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                ],
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  const Text(
+                    'Emergency bypass',
+                    style: TextStyle(
+                      color: Color(0xFF7A7A70),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    bypassActive ? 'Yes' : 'No',
+                    style: const TextStyle(
+                      color: Color(0xFF2C2C25),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                ],
+              ),
+              const Spacer(),
+            ],
           ),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: valueColor ?? const Color(0xFFF4F3EF),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
 
-class StatsScreenBackgroundPainter extends CustomPainter {
+class FlowPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height * 0.35);
-    final radius = size.width * 0.6;
-
-    final gradient = RadialGradient(
-      colors: [
-        const Color(0xFF1C2430).withOpacity(0.5),
-        const Color(0xFF0C0F16).withOpacity(0),
-      ],
-    );
-
-    final rect = Rect.fromCircle(center: center, radius: radius);
     final paint = Paint()
-      ..shader = gradient.createShader(rect)
-      ..style = PaintingStyle.fill;
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFE3F1EA), Color(0xFFCFE6DC)],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 42
+      ..strokeCap = StrokeCap.round;
 
-    canvas.drawCircle(center, radius, paint);
+    final path = Path()
+      ..moveTo(210, -80)
+      ..cubicTo(250, 120, 170, 260, 210, 420)
+      ..cubicTo(250, 600, 170, 760, 210, 900);
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class StatsLeavesPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    _drawBigLeaf(canvas, 260, 64, 18);
+    _drawBigLeaf(canvas, -30, 640, -18);
+    _drawSmallLeaf(canvas, 44, 152, 0);
+    _drawSmallLeaf(canvas, 300, 272, 0);
+    _drawSmallLeaf(canvas, 180, 520, 0);
+  }
+
+  void _drawBigLeaf(Canvas canvas, double x, double y, double rotation) {
+    canvas.save();
+    canvas.translate(x + 45, y);
+    canvas.rotate(rotation * 3.14159 / 180);
+    final paint = Paint()
+      ..color = const Color(0x385F7743)
+      ..style = PaintingStyle.fill;
+    final path = Path()
+      ..moveTo(0, 0)
+      ..cubicTo(20, -34, 70, -34, 90, 0)
+      ..cubicTo(70, 20, 20, 20, 0, 0)
+      ..close();
+    canvas.drawPath(path, paint);
+    canvas.restore();
+  }
+
+  void _drawSmallLeaf(Canvas canvas, double x, double y, double rotation) {
+    canvas.save();
+    canvas.translate(x + 14, y);
+    canvas.rotate(rotation * 3.14159 / 180);
+    final paint = Paint()
+      ..color = const Color(0x388DA167)
+      ..style = PaintingStyle.fill;
+    final path = Path()
+      ..moveTo(0, 0)
+      ..cubicTo(6, -10, 20, -10, 28, 0)
+      ..cubicTo(20, 6, 6, 6, 0, 0)
+      ..close();
+    canvas.drawPath(path, paint);
+    canvas.restore();
   }
 
   @override

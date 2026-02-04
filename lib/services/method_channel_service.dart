@@ -13,6 +13,7 @@ class MethodChannelService {
       return {
         'accessibility_enabled':
             result['accessibility_enabled'] as bool? ?? false,
+        'service_running': result['service_running'] as bool? ?? false,
         'overlay_enabled': result['overlay_enabled'] as bool? ?? false,
         'device_admin_enabled':
             result['device_admin_enabled'] as bool? ?? false,

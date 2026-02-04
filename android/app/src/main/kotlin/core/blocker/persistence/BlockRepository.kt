@@ -87,6 +87,12 @@ class BlockRepository(private val store: LocalBlockStore) {
         store.writeData(PersistenceData(data.blockRules, data.bypasses, emptyList()))
     }
 
+    fun clearActiveTimer(timerId: String) {
+        val data = store.readData()
+        val filteredTimers = data.activeTimers.filter { it.id != timerId }
+        store.writeData(PersistenceData(data.blockRules, data.bypasses, filteredTimers))
+    }
+
     fun updateActiveTimer(timer: ActiveTimer) {
         val currentData = store.readData()
         val currentTimeMillis = System.currentTimeMillis()

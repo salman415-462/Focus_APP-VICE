@@ -8,10 +8,12 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import java.io.IOException
 import java.util.ArrayDeque
 import android.view.accessibility.AccessibilityEvent
+import core.blocker.engine.ActiveTimer
 import core.blocker.engine.BlockDecisionEngine
 import core.blocker.engine.Decision
 import core.blocker.engine.TimerMode
@@ -26,10 +28,9 @@ class BlockAccessibilityService : AccessibilityService() {
     private var lastEnforcedPackage: String? = null
     private var lastEnforceTimeMs: Long = 0
     private val enforcementCooldownMs: Long = 500
-    private var waitingForHome: Boolean = false
     private var isBlockingOverlayShowing: Boolean = false
     private var blockSuppressed: Boolean = false
-    private var showOverlayTimeoutRunnable: Runnable? = null
+    private var hasEnforcedSinceLastHome: Boolean = false
     private var removeOverlayRunnable: Runnable? = null
     private val handler = Handler(Looper.getMainLooper())
 
@@ -64,6 +65,9 @@ class BlockAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
+        // DEBUG: Log event received
+        Log.d(TAG, "DEBUG: Received event type=${event.eventType} package=${event.packageName}")
+
         // Process only relevant events
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
             event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return
@@ -71,27 +75,30 @@ class BlockAccessibilityService : AccessibilityService() {
         val packageName = event.packageName?.toString() ?: return
         if (packageName == applicationContext.packageName) return
         if (isSystemUiPackage(packageName)) {
-            // If we were waiting for home and system UI package indicates home, handle below
+            // Ignore system UI packages
+            return
         }
 
-        // Home detection: clear blocking state immediately and suppress further overlays
+        // DEBUG: Log event received
+        Log.d(TAG, "DEBUG: onAccessibilityEvent pkg=$packageName suppressed=$blockSuppressed enforced=$hasEnforcedSinceLastHome")
+
+        // Home detection: only clear suppression, do NOT remove overlay
         val homePackage = getHomePackageName()
         if (packageName == homePackage) {
-            clearBlockingState()
+            // Clear suppression and reset enforcement flag when Home is detected
+            blockSuppressed = true
+            hasEnforcedSinceLastHome = false
+            Log.d(TAG, "DEBUG: Home detected, suppression reset")
             return
         }
 
-        // If suppression is active, only resume processing when a blocked app opens
-        if (blockSuppressed) {
-            if (isPackageBlocked(packageName)) {
-                // User has opened a blocked app again; resume blocking
-                blockSuppressed = false
-                evaluateAndEnforce(packageName)
-            }
+        // If suppression is active AND we've already enforced once, skip all processing
+        // This guarantees first blocked app always runs, repeated spam is suppressed
+        if (blockSuppressed && hasEnforcedSinceLastHome) {
+            Log.d(TAG, "DEBUG: Suppression active, skipping enforcement")
             return
         }
 
-        // If we were waiting for Home and Home already showed, cancellation handled above.
         // Evaluate blocking only for app windows (non-home)
         evaluateAndEnforce(packageName)
 
@@ -101,14 +108,16 @@ class BlockAccessibilityService : AccessibilityService() {
         val activePomodoroTimers = repository.getActiveTimers().filter {
             it.isActive(currentTimeMillis) && (it.mode == TimerMode.POMODORO_FOCUS || it.mode == TimerMode.POMODORO_BREAK)
         }
-        if (activePomodoroTimers.isNotEmpty() && !blockSuppressed) {
-            // Don't override blocking overlay
-            if (!isBlockingOverlayShowing && !overlayController.isShowing()) {
+        
+        // FIX: Never overwrite blocking overlay with pomodoro overlay
+        if (activePomodoroTimers.isNotEmpty() && !isBlockingOverlayShowing && !blockSuppressed) {
+            // Only show pomodoro if blocking overlay is NOT showing
+            if (!overlayController.isShowing()) {
                 overlayController.showOverlay("Pomodoro Timer is running")
             }
         } else {
-            // Only remove pomodoro overlay if not blocking overlay
-            if (!isBlockingOverlayShowing) {
+            // Only remove pomodoro overlay if blocking overlay is not showing
+            if (!isBlockingOverlayShowing && !overlayController.isShowing()) {
                 overlayController.removeOverlay()
             }
         }
@@ -135,50 +144,38 @@ class BlockAccessibilityService : AccessibilityService() {
 
         // Rate-limit repeated enforcement for the same package
         if (packageName == lastEnforcedPackage && (currentTimeMillis - lastEnforceTimeMs) < enforcementCooldownMs) {
+            Log.d(TAG, "DEBUG: Cooldown active, skipping $packageName")
             return
         }
 
-        // Check active timers first (custom duration)
+        // Check active bypasses first - highest priority
+        val activeBypasses = repository.getAllBypasses()
+        val activeBypass = activeBypasses.find { it.resourceId == packageName && it.isActive(currentTimeMillis) }
+        
+        // Check active timers
         val activeTimers = repository.getActiveTimers().filter { it.isActive(currentTimeMillis) }
         val blockingTimer = activeTimers.firstOrNull { packageName in it.blockedPackages }
 
-        if (blockingTimer != null) {
-            // Get remaining time for this timer
-            val remainingSeconds = blockingTimer.getRemainingSeconds(currentTimeMillis)
-
-            // Enforce 2-minute minimum remaining time rule for bypass
-            val bypassAllowed = remainingSeconds >= MIN_BYPASS_REMAINING_SECONDS
-
-            if (!bypassAllowed) {
-                // Timer has less than 2 minutes remaining - reject bypass and enforce block
-                lastBlockedPackage = packageName
-                lastEnforcedPackage = packageName
-                lastEnforceTimeMs = currentTimeMillis
-                enforceBlock(packageName)
-                return
-            }
-
-            // Timer has >= 2 minutes remaining - check bypass rules via BlockDecisionEngine
-            val result = BlockDecisionEngine.evaluate(
-                resourceId = packageName,
-                currentTimeMillis = currentTimeMillis,
-                activeBlockRules = emptyList(), // timers act as block source
-                activeBypasses = repository.getAllBypasses()
-            )
-
-            if (result.decision == Decision.BLOCK) {
-                lastBlockedPackage = packageName
-                lastEnforcedPackage = packageName
-                lastEnforceTimeMs = currentTimeMillis
-                enforceBlock(packageName)
-            }
+        // DECISION ORDER: bypass → timer → normal rules
+        if (activeBypass != null) {
+            // Emergency bypass active - allow through
+            Log.d(TAG, "DEBUG: Emergency bypass active for $packageName, allowing")
+            lastBlockedPackage = null
             return
         }
 
-        // Check schedules (existing logic)
-        val activeBlockRules = repository.getAllBlockRules()
-        val activeBypasses = repository.getAllBypasses()
+        if (blockingTimer != null) {
+            // Timer active - hard block, no bypass check
+            Log.d(TAG, "DEBUG: Timer active for $packageName, enforcing block")
+            lastBlockedPackage = packageName
+            lastEnforcedPackage = packageName
+            lastEnforceTimeMs = currentTimeMillis
+            enforceBlock(packageName, blockingTimer)
+            return
+        }
 
+        // No bypass, no timer - check normal rules
+        val activeBlockRules = repository.getAllBlockRules()
         val result = BlockDecisionEngine.evaluate(
             resourceId = packageName,
             currentTimeMillis = currentTimeMillis,
@@ -186,28 +183,43 @@ class BlockAccessibilityService : AccessibilityService() {
             activeBypasses = activeBypasses
         )
 
+        Log.d(TAG, "DEBUG: BlockDecisionEngine final decision=${result.decision}")
+
         when (result.decision) {
             Decision.BLOCK -> {
                 lastBlockedPackage = packageName
                 lastEnforcedPackage = packageName
                 lastEnforceTimeMs = currentTimeMillis
-                enforceBlock(packageName)
+                enforceBlock(packageName, null)
             }
             Decision.ALLOW -> {
                 lastBlockedPackage = null
+                Log.d(TAG, "DEBUG: Decision ALLOW, no block enforced")
             }
         }
     }
 
-    private fun enforceBlock(packageName: String) {
-        // Immediately send user to Home
-        sendToHome()
+    private fun enforceBlock(packageName: String, blockingTimer: ActiveTimer?) {
+        Log.d(TAG, "BLOCK detected for $packageName - overlay requested")
 
-        // Best-effort: schedule a kill of the target app so it can't be reopened from Recents
-        scheduleKill(packageName)
+        // Consume timer if this was a timer-based block
+        if (blockingTimer != null) {
+            Log.d(TAG, "DEBUG: Consuming timer ${blockingTimer.id} for $packageName")
+            repository.clearActiveTimer(blockingTimer.id)
+        }
 
-        // Set waiting flag - we expect to see Home soon
-        waitingForHome = true
+        // Mark that enforcement has happened since last Home
+        hasEnforcedSinceLastHome = true
+
+        // Show overlay IMMEDIATELY first (while blocked app is still foreground)
+        showBlockingOverlay()
+
+        // Delay Home slightly to let overlay attach to blocked app window
+        // 200ms gives more time for view to render before Home takes focus
+        handler.postDelayed({
+            sendToHome()
+            scheduleKill(packageName)
+        }, HOME_DELAY_MS)
 
         // Ensure we don't quickly re-process the same package
         lastEnforcedPackage = packageName
@@ -215,38 +227,47 @@ class BlockAccessibilityService : AccessibilityService() {
 
         // Clear any previous suppression (we are actively enforcing)
         blockSuppressed = false
-
-        // Schedule a fallback: if Home doesn't appear in 500ms, still show overlay and remove after 2.5s
-        showOverlayTimeoutRunnable?.let { handler.removeCallbacks(it) }
-        showOverlayTimeoutRunnable = Runnable {
-            waitingForHome = false
-            showBlockingOverlay()
-        }
-        handler.postDelayed(showOverlayTimeoutRunnable!!, 500)
     }
 
     private fun showBlockingOverlay() {
+        Log.d(TAG, "DEBUG: showBlockingOverlay checking permission")
+
+        // Check overlay permission before showing
+        val hasOverlayPermission = Settings.canDrawOverlays(this)
+        Log.d(TAG, "DEBUG: canDrawOverlays=$hasOverlayPermission")
+
+        if (!hasOverlayPermission) {
+            Log.w(TAG, "showBlockingOverlay: permission not granted, skipping")
+            return
+        }
+
         // Show overlay and mark state
         try {
             overlayController.showOverlay("This app is blocked")
             isBlockingOverlayShowing = true
+            Log.d(TAG, "showBlockingOverlay: overlay shown successfully")
         } catch (e: Exception) {
-            Log.w(TAG, "showOverlay failed", e)
-            isBlockingOverlayShowing = true // still consider we tried to show
+            Log.w(TAG, "showBlockingOverlay: showOverlay failed", e)
+            isBlockingOverlayShowing = false
+            return
         }
 
-        // Schedule removal after 2.5 seconds
+        // Schedule removal after 2000ms (time-based only, no early cancellation)
         removeOverlayRunnable?.let { handler.removeCallbacks(it) }
         removeOverlayRunnable = Runnable {
+            val wasShowing = isBlockingOverlayShowing
             try {
                 overlayController.removeOverlay()
+                Log.d(TAG, "showBlockingOverlay: overlay removed (timeout)")
             } catch (e: Exception) {
-                Log.w(TAG, "removeOverlay failed", e)
+                Log.w(TAG, "showBlockingOverlay: removeOverlay failed", e)
             }
-            isBlockingOverlayShowing = false
-            // After removal, suppress further overlays until Home is reached (handled in home detection)
+            // Only set flag false if overlay was actually showing
+            if (wasShowing) {
+                isBlockingOverlayShowing = false
+            }
         }
-        handler.postDelayed(removeOverlayRunnable!!, 2500)
+        handler.postDelayed(removeOverlayRunnable!!, OVERLAY_TIMEOUT_MS)
     }
 
     private fun sendToHome() {
@@ -255,6 +276,7 @@ class BlockAccessibilityService : AccessibilityService() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         startActivity(intent)
+        Log.d(TAG, "DEBUG: sendToHome intent sent")
     }
 
     private fun scheduleKill(packageName: String) {
@@ -339,33 +361,39 @@ class BlockAccessibilityService : AccessibilityService() {
     }
 
     private fun clearBlockingState() {
-        // Cancel scheduled runnables
-        showOverlayTimeoutRunnable?.let { handler.removeCallbacks(it) }
+        // Cancel scheduled overlay removal runnable
         removeOverlayRunnable?.let { handler.removeCallbacks(it) }
-        showOverlayTimeoutRunnable = null
         removeOverlayRunnable = null
 
-        // Remove overlay immediately
-        overlayController.removeOverlay()
-
-        // Reset state
-        waitingForHome = false
-        isBlockingOverlayShowing = false
+        // Reset state - do NOT remove overlay here (it will timeout naturally)
+        // Only reset flag if overlay is not actually showing
+        if (!overlayController.isShowing()) {
+            isBlockingOverlayShowing = false
+        }
         lastBlockedPackage = null
         lastEnforcedPackage = null
         lastEnforceTimeMs = 0
 
         // Suppress further overlays until a blocked app is opened again
         blockSuppressed = true
+
+        Log.d(TAG, "clearBlockingState: state cleared, overlay will timeout naturally")
     }
 
     private fun isPackageBlocked(packageName: String): Boolean {
         val currentTimeMillis = System.currentTimeMillis()
+        
+        // Check bypass first - bypass overrides blocking
+        val activeBypasses = repository.getAllBypasses()
+        val activeBypass = activeBypasses.find { it.resourceId == packageName && it.isActive(currentTimeMillis) }
+        if (activeBypass != null) return false
+        
+        // Check timers - timer blocks if active
         val activeTimers = repository.getActiveTimers().filter { it.isActive(currentTimeMillis) }
         if (activeTimers.any { packageName in it.blockedPackages }) return true
 
+        // Check normal rules
         val activeBlockRules = repository.getAllBlockRules()
-        val activeBypasses = repository.getAllBypasses()
         val result = BlockDecisionEngine.evaluate(
             resourceId = packageName,
             currentTimeMillis = currentTimeMillis,
@@ -394,10 +422,15 @@ class BlockAccessibilityService : AccessibilityService() {
         private const val TAG = "BlockAccessibilitySvc"
 
         /**
-         * Minimum remaining time on a blocking timer required for emergency bypass activation.
-         * Prevents last-second bypass abuse when timer is nearly complete.
+         * Delay before sending user to Home after showing overlay.
+         * Gives overlay time to attach to blocked app window before Home takes focus.
          */
-        private const val MIN_BYPASS_REMAINING_SECONDS = 120
+        private const val HOME_DELAY_MS = 200L
+
+        /**
+         * How long the blocking overlay stays visible before auto-removal.
+         */
+        private const val OVERLAY_TIMEOUT_MS = 2000L
 
         fun isServiceConnected(context: Context): Boolean {
             val prefs = context.getSharedPreferences("blocker_prefs", Context.MODE_PRIVATE)

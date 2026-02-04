@@ -4,7 +4,7 @@ import 'screens/mode_selection_screen.dart';
 import 'screens/app_selection_screen.dart';
 import 'screens/schedule_config_screen.dart';
 import 'screens/pomodoro_config_screen.dart';
-import 'screens/active_block_screen.dart';
+
 import 'screens/permission_status_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/splash_screen.dart';
@@ -81,6 +81,42 @@ class FocusGuardApp extends StatelessWidget {
             fontSize: 14,
           ),
         ),
+        // UI Consistency: Add TimePicker and Progress themes
+        timePickerTheme: TimePickerThemeData(
+          backgroundColor: const Color(0xFFFFFDF2),
+          dialBackgroundColor: const Color(0xFFF3F2E8),
+          hourMinuteColor: const Color(0xFF16213E),
+          hourMinuteTextColor: Colors.white,
+          dayPeriodColor: const Color(0xFF6E8F5E),
+          dayPeriodTextColor: Colors.white,
+          entryModeIconColor: const Color(0xFF4E6E3A),
+          helpTextStyle: TextStyle(
+            color: const Color(0xFF7A7A70),
+            fontSize: 14,
+          ),
+        ),
+        progressIndicatorTheme: const ProgressIndicatorThemeData(
+          color: Color(0xFF6E8F5E),
+          linearTrackColor: Color(0xFFE6EFE3),
+          refreshBackgroundColor: Color(0xFFE6EFE3),
+        ),
+        // UI Consistency: Custom dialog button style
+        dialogTheme: DialogTheme(
+          backgroundColor: const Color(0xFFFFFDF2),
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+          titleTextStyle: const TextStyle(
+            color: Color(0xFF2C2C25),
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+          ),
+          contentTextStyle: const TextStyle(
+            color: Color(0xFF7A7A70),
+            fontSize: 14,
+          ),
+        ),
         useMaterial3: true,
       ),
       initialRoute: '/splash',
@@ -91,7 +127,6 @@ class FocusGuardApp extends StatelessWidget {
         '/app-selection': (context) => const AppSelectionScreen(),
         '/schedule-config': (context) => const ScheduleConfigScreen(),
         '/pomodoro-config': (context) => const PomodoroConfigScreen(),
-        '/active-block': (context) => const ActiveBlockScreen(),
         '/permissions': (context) => const PermissionStatusScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
         '/stats': (context) => const StatsScreen(),

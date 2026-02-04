@@ -1,0 +1,157 @@
+<svg width="360" height="800" viewBox="0 0 360 800"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <!-- SHADOW -->
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="12" stdDeviation="20" flood-opacity="0.12"/>
+    </filter>
+
+    <!-- DEEP ATMOSPHERE -->
+    <linearGradient id="atmosphere" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF1C6"/>
+      <stop offset="22%" stop-color="#FFF9E6"/>
+      <stop offset="48%" stop-color="#F7F6EC"/>
+      <stop offset="72%" stop-color="#EFEEDC"/>
+      <stop offset="100%" stop-color="#E6E4D4"/>
+    </linearGradient>
+
+    <!-- RIVER (SUBTLE FLOW) -->
+    <linearGradient id="river" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#DFF1EA"/>
+      <stop offset="100%" stop-color="#CBE4DA"/>
+    </linearGradient>
+
+    <!-- CARD (EMBEDDED) -->
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F3F2E8"/>
+    </linearGradient>
+
+    <!-- ACCENT -->
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6E8F5E"/>
+      <stop offset="100%" stop-color="#4E6E3A"/>
+    </linearGradient>
+
+    <!-- LEAVES -->
+    <path id="leafBig"
+      d="M0,0 C20,-34 70,-34 90,0 C70,20 20,20 0,0 Z"
+      fill="#5F7743" opacity="0.24"/>
+
+    <path id="leafSmall"
+      d="M0,0 C6,-10 20,-10 28,0 C20,6 6,6 0,0 Z"
+      fill="#8DA167" opacity="0.22"/>
+  </defs>
+
+  <!-- BACKGROUND -->
+  <rect width="360" height="800" fill="url(#atmosphere)"/>
+
+  <!-- SUBTLE FLOW RIVER -->
+  <path d="M210 -80
+           C250 120 170 260 210 420
+           C250 600 170 760 210 900"
+        stroke="url(#river)"
+        stroke-width="38"
+        fill="none"
+        opacity="0.45"/>
+
+  <!-- LEAVES (MORE INTENTIONAL) -->
+  <use href="#leafBig" x="255" y="64" transform="rotate(18)"/>
+  <use href="#leafBig" x="-40" y="640" transform="rotate(-18)"/>
+  <use href="#leafSmall" x="52" y="164"/>
+  <use href="#leafSmall" x="298" y="272"/>
+  <use href="#leafSmall" x="188" y="520"/>
+
+  <!-- HEADER -->
+  <text x="24" y="44" font-size="20" fill="#2C2C25">
+    Pomodoro
+  </text>
+  <text x="24" y="66" font-size="13" fill="#7A7A70">
+    Set a steady rhythm
+  </text>
+
+  <!-- FOCUS (PRIMARY, HEAVIER) -->
+  <g filter="url(#shadow)">
+    <rect x="20" y="120" width="320" height="132" rx="32"
+          fill="url(#card)"/>
+
+    <text x="36" y="154" font-size="13" fill="#6F7368">
+      Focus
+    </text>
+
+    <text x="180" y="214" text-anchor="middle"
+          font-size="38" fill="#2C2C25">
+      25 min
+    </text>
+
+    <text x="76" y="214" font-size="30" fill="#7A7A70">–</text>
+    <text x="284" y="214" text-anchor="end"
+          font-size="30" fill="#7A7A70">+</text>
+  </g>
+
+  <!-- BREAK (SECONDARY) -->
+  <g filter="url(#shadow)">
+    <rect x="24" y="272" width="312" height="108" rx="28"
+          fill="url(#card)"/>
+
+    <text x="36" y="304" font-size="13" fill="#6F7368">
+      Break
+    </text>
+
+    <text x="180" y="342" text-anchor="middle"
+          font-size="30" fill="#2C2C25">
+      5 min
+    </text>
+
+    <text x="76" y="342" font-size="24" fill="#7A7A70">–</text>
+    <text x="284" y="342" text-anchor="end"
+          font-size="24" fill="#7A7A70">+</text>
+  </g>
+
+  <!-- REPEAT (TERTIARY) -->
+  <g filter="url(#shadow)">
+    <rect x="24" y="400" width="312" height="100" rx="26"
+          fill="url(#card)"/>
+
+    <text x="36" y="432" font-size="13" fill="#6F7368">
+      Repeat
+    </text>
+
+    <text x="180" y="468" text-anchor="middle"
+          font-size="26" fill="#2C2C25">
+      4 cycles
+    </text>
+
+    <text x="80" y="468" font-size="22" fill="#7A7A70">–</text>
+    <text x="280" y="468" text-anchor="end"
+          font-size="22" fill="#7A7A70">+</text>
+  </g>
+
+  <!-- SUMMARY (MERGED INTO FLOW) -->
+  <text x="24" y="546" font-size="14" fill="#7A7A70">
+    This session becomes
+  </text>
+
+  <text x="24" y="578" font-size="30" fill="#2C2C25">
+    2h total
+  </text>
+
+  <text x="24" y="606" font-size="13" fill="#7A7A70">
+    • 1h 40m focused
+  </text>
+  <text x="24" y="626" font-size="13" fill="#7A7A70">
+    • 20m rest
+  </text>
+
+  <!-- START -->
+  <g filter="url(#shadow)">
+    <rect x="24" y="684" width="312" height="58" rx="29"
+          fill="url(#accent)"/>
+    <text x="180" y="720" text-anchor="middle"
+          font-size="16" fill="#FFFFFF" font-weight="500">
+      Start session
+    </text>
+  </g>
+
+</svg>

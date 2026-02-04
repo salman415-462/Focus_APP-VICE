@@ -169,9 +169,14 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF6E8F5E),
-              surface: Color(0xFFFFFFFF),
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: const Color(0xFFFFFDF2),
+              dialBackgroundColor: const Color(0xFFF3F2E8),
+              hourMinuteColor: const Color(0xFF16213E),
+              hourMinuteTextColor: Colors.white,
+              dayPeriodColor: const Color(0xFF6E8F5E),
+              dayPeriodTextColor: Colors.white,
+              entryModeIconColor: const Color(0xFF4E6E3A),
             ),
           ),
           child: child!,
@@ -193,9 +198,14 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF6E8F5E),
-              surface: Color(0xFFFFFFFF),
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: const Color(0xFFFFFDF2),
+              dialBackgroundColor: const Color(0xFFF3F2E8),
+              hourMinuteColor: const Color(0xFF16213E),
+              hourMinuteTextColor: Colors.white,
+              dayPeriodColor: const Color(0xFF6E8F5E),
+              dayPeriodTextColor: Colors.white,
+              entryModeIconColor: const Color(0xFF4E6E3A),
             ),
           ),
           child: child!,
@@ -315,12 +325,10 @@ class _ScheduleConfigScreenState extends State<ScheduleConfigScreen>
         _isNavigating = true;
       });
 
-      Navigator.pushNamed(context, '/active-block').then((_) {
-        if (!mounted) return;
-        setState(() {
-          _isSaving = false;
-          _isNavigating = false;
-        });
+      Navigator.popUntil(context, (route) => route.isFirst);
+      setState(() {
+        _isSaving = false;
+        _isNavigating = false;
       });
     } catch (e) {
       if (!mounted) return;
