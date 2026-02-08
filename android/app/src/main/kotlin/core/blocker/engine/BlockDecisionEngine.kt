@@ -9,7 +9,7 @@ object BlockDecisionEngine {
         activeBypasses: List<BypassRule>
     ): DecisionResult {
         val sortedRules = activeBlockRules.sorted()
-        val activeBypass = findActiveBypass(resourceId, currentTimeMillis, activeBypasses)
+        val activeBypass = BypassRule.findActiveBypass(resourceId, currentTimeMillis, activeBypasses)
         val blockingRule = findBlockingRule(resourceId, currentTimeMillis, sortedRules)
 
         return when {
@@ -43,14 +43,6 @@ object BlockDecisionEngine {
                 )
             }
         }
-    }
-
-    private fun findActiveBypass(
-        resourceId: String,
-        currentTimeMillis: Long,
-        bypasses: List<BypassRule>
-    ): BypassRule? {
-        return bypasses.find { it.resourceId == resourceId && it.isActive(currentTimeMillis) }
     }
 
     private fun findBlockingRule(

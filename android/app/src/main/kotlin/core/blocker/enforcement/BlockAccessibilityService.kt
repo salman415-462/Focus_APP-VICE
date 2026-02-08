@@ -15,6 +15,7 @@ import java.util.ArrayDeque
 import android.view.accessibility.AccessibilityEvent
 import core.blocker.engine.ActiveTimer
 import core.blocker.engine.BlockDecisionEngine
+import core.blocker.engine.BypassRule
 import core.blocker.engine.Decision
 import core.blocker.engine.TimerMode
 import core.blocker.persistence.BlockRepository
@@ -149,8 +150,9 @@ class BlockAccessibilityService : AccessibilityService() {
         }
 
         // Check active bypasses first - highest priority
+        // Uses wildcard-aware lookup (resourceId = "*" bypasses all packages)
         val activeBypasses = repository.getAllBypasses()
-        val activeBypass = activeBypasses.find { it.resourceId == packageName && it.isActive(currentTimeMillis) }
+        val activeBypass = BypassRule.findActiveBypass(packageName, currentTimeMillis, activeBypasses)
         
         // Check active timers
         val activeTimers = repository.getActiveTimers().filter { it.isActive(currentTimeMillis) }
@@ -381,8 +383,9 @@ class BlockAccessibilityService : AccessibilityService() {
         val currentTimeMillis = System.currentTimeMillis()
         
         // Check bypass first - bypass overrides blocking
+        // Uses wildcard-aware lookup (resourceId = "*" bypasses all packages)
         val activeBypasses = repository.getAllBypasses()
-        val activeBypass = activeBypasses.find { it.resourceId == packageName && it.isActive(currentTimeMillis) }
+        val activeBypass = BypassRule.findActiveBypass(packageName, currentTimeMillis, activeBypasses)
         if (activeBypass != null) return false
         
         // Check timers - timer blocks if active

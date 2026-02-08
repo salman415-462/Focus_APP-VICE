@@ -17,6 +17,14 @@ data class BypassRule(
     val expiresAtMillis: Long
         get() = grantedAtMillis + durationMillis
 
+    /**
+     * Check if this bypass allows access for the given package name.
+     * A bypass with resourceId = "*" (wildcard) allows all packages.
+     */
+    fun allowsPackage(packageName: String): Boolean {
+        return resourceId == WILDCARD || resourceId == packageName
+    }
+
     fun isActive(currentTimeMillis: Long): Boolean {
         return currentTimeMillis in grantedAtMillis until expiresAtMillis
     }
@@ -28,6 +36,21 @@ data class BypassRule(
     companion object {
         const val DEFAULT_DURATION_MILLIS = 2L * 60 * 1000
         const val MAX_DURATION_MILLIS = 24L * 60 * 60 * 1000
+        const val WILDCARD = "*"
+
+        /**
+         * Find an active bypass that allows access for the given package name.
+         * Supports wildcard bypasses (resourceId = "*") that allow all packages.
+         */
+        fun findActiveBypass(
+            packageName: String,
+            currentTimeMillis: Long,
+            bypasses: List<BypassRule>
+        ): BypassRule? {
+            return bypasses.find { bypass ->
+                bypass.isActive(currentTimeMillis) && bypass.allowsPackage(packageName)
+            }
+        }
     }
 }
 
