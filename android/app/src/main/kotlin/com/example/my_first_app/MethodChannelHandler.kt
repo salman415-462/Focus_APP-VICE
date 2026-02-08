@@ -731,12 +731,10 @@ class MethodChannelHandler(private val context: Context) {
 
     private fun openDeviceAdminSettings(result: MethodChannel.Result) {
         try {
-            val admin = ComponentName(context, BlockAdminReceiver::class.java)
-            val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
-                putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin)
-                putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Required to prevent app deletion and enforce focus lock.")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
+            // Launch DeviceAdminBridgeActivity directly
+            // Note: NOT using FLAG_ACTIVITY_NEW_TASK because we're called from within
+            // the Flutter Activity's context, which already has a foreground Activity
+            val intent = Intent(context, DeviceAdminBridgeActivity::class.java)
             context.startActivity(intent)
             result.success(true)
         } catch (e: Exception) {

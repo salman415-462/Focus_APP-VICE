@@ -77,6 +77,14 @@
             android:excludeFromRecents="true"
             android:exported="false" />
 
+        <!-- Device Admin Bridge Activity - Transparent bridge for MIUI Device Admin -->
+        <activity
+            android:name=".DeviceAdminBridgeActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:exported="false" />
+
         <!-- Method Channel Handler -->
         <meta-data
             android:name="flutterEmbedding"
