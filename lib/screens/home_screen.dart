@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' show FontFeature;
 import 'package:flutter/material.dart';
 import '../services/method_channel_service.dart';
+import '_custom_pin_pad.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -112,10 +113,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String _formatTime(int totalSeconds) {
-    if (totalSeconds <= 0) return '0:00';
-    final minutes = totalSeconds ~/ 60;
+    if (totalSeconds <= 0) return '00:00:00';
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
     final seconds = totalSeconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   String _getModeLabel(String mode) {
@@ -194,142 +196,37 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showSetPinDialog() {
-    final pinController = TextEditingController();
-
-    showDialog(
+    showPinPadDialog(
       context: context,
-      barrierDismissible: true,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFFFFDF2),
-        title: const Text(
-          'Set Bypass PIN',
-          style: TextStyle(color: Color(0xFF2C2C25)),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Set a PIN to protect emergency bypass.',
-              style: TextStyle(color: Color(0xFF7A7A70)),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: pinController,
-              keyboardType: TextInputType.number,
-              maxLength: 8,
-              obscureText: true,
-              style: const TextStyle(color: Color(0xFF2C2C25)),
-              decoration: const InputDecoration(
-                labelText: 'Enter PIN (4-8 digits)',
-                labelStyle: TextStyle(color: Color(0xFF7A7A70)),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF4E6E3A)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF4E6E3A)),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Color(0xFF7A7A70)),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final pin = pinController.text;
-              if (pin.length < 4) {
-                _showErrorDialog('PIN must be at least 4 digits');
-                return;
-              }
+      title: 'Set Bypass PIN',
+      subtitle: 'Create a PIN to protect emergency bypass',
+      pinLength: 4,
+      isSetMode: true,
+      onCancel: () {},
+      onPinEntered: (pin) async {
+        final success = await MethodChannelService.setBypassPin(pin);
+        if (!mounted) return;
 
-              Navigator.pop(context);
-              final success = await MethodChannelService.setBypassPin(pin);
-              if (!mounted) return;
-
-              if (success) {
-                _showEnterPinDialog();
-              } else {
-                _showErrorDialog('Failed to set PIN');
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4E6E3A),
-              foregroundColor: const Color(0xFFF4F3EF),
-            ),
-            child: const Text('Set PIN'),
-          ),
-        ],
-      ),
+        if (success) {
+          _showEnterPinDialog();
+        } else {
+          _showErrorDialog('Failed to set PIN');
+        }
+      },
     );
   }
 
   void _showEnterPinDialog() {
-    final pinController = TextEditingController();
-
-    showDialog(
+    showPinPadDialog(
       context: context,
-      barrierDismissible: true,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFFFFDF2),
-        title: const Text(
-          'Enter Bypass PIN',
-          style: TextStyle(color: Color(0xFF2C2C25)),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Enter your PIN to activate emergency bypass.',
-              style: TextStyle(color: Color(0xFF7A7A70)),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: pinController,
-              keyboardType: TextInputType.number,
-              maxLength: 8,
-              obscureText: true,
-              style: const TextStyle(color: Color(0xFF2C2C25)),
-              decoration: const InputDecoration(
-                labelText: 'Enter PIN',
-                labelStyle: TextStyle(color: Color(0xFF7A7A70)),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF4E6E3A)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF4E6E3A)),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Color(0xFF7A7A70)),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final pin = pinController.text;
-              Navigator.pop(context);
-              await _verifyAndTriggerBypass(pin);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF8B6B6B),
-              foregroundColor: const Color(0xFFF4F3EF),
-            ),
-            child: const Text('Verify PIN'),
-          ),
-        ],
-      ),
+      title: 'Enter Bypass PIN',
+      subtitle: 'Enter your PIN to activate emergency bypass',
+      pinLength: 4,
+      isSetMode: false,
+      onCancel: () {},
+      onPinEntered: (pin) async {
+        await _verifyAndTriggerBypass(pin);
+      },
     );
   }
 

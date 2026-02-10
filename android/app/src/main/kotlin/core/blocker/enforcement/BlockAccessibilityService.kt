@@ -143,6 +143,9 @@ class BlockAccessibilityService : AccessibilityService() {
     private fun evaluateAndEnforce(packageName: String) {
         val currentTimeMillis = System.currentTimeMillis()
 
+        // TEMP LOG: Log all enforcement triggers
+        Log.d(TAG, "TEMP: evaluateAndEnforce called for $packageName eventType=${event?.eventType}")
+
         // Rate-limit repeated enforcement for the same package
         if (packageName == lastEnforcedPackage && (currentTimeMillis - lastEnforceTimeMs) < enforcementCooldownMs) {
             Log.d(TAG, "DEBUG: Cooldown active, skipping $packageName")
@@ -153,10 +156,13 @@ class BlockAccessibilityService : AccessibilityService() {
         // Uses wildcard-aware lookup (resourceId = "*" bypasses all packages)
         val activeBypasses = repository.getAllBypasses()
         val activeBypass = BypassRule.findActiveBypass(packageName, currentTimeMillis, activeBypasses)
-        
+
         // Check active timers
         val activeTimers = repository.getActiveTimers().filter { it.isActive(currentTimeMillis) }
         val blockingTimer = activeTimers.firstOrNull { packageName in it.blockedPackages }
+
+        // TEMP LOG: Log timer state
+        Log.d(TAG, "TEMP: Active timers=${activeTimers.size} blockingTimer=${blockingTimer?.id} pomodoroTimers=${activeTimers.count { it.mode == TimerMode.POMODORO_FOCUS || it.mode == TimerMode.POMODORO_BREAK }}")
 
         // DECISION ORDER: bypass → timer → normal rules
         if (activeBypass != null) {
@@ -229,7 +235,7 @@ class BlockAccessibilityService : AccessibilityService() {
     }
 
     private fun showBlockingOverlay() {
-        Log.d(TAG, "DEBUG: showBlockingOverlay checking permission")
+        Log.d(TAG, "TEMP: showBlockingOverlay called")
 
         // Check overlay permission before showing
         val hasOverlayPermission = Settings.canDrawOverlays(this)
@@ -244,7 +250,7 @@ class BlockAccessibilityService : AccessibilityService() {
         try {
             overlayController.showOverlay("This app is blocked")
             isBlockingOverlayShowing = true
-            Log.d(TAG, "showBlockingOverlay: overlay shown successfully")
+            Log.d(TAG, "TEMP: showBlockingOverlay: overlay shown successfully")
         } catch (e: Exception) {
             Log.w(TAG, "showBlockingOverlay: showOverlay failed", e)
             isBlockingOverlayShowing = false
@@ -257,7 +263,7 @@ class BlockAccessibilityService : AccessibilityService() {
             val wasShowing = isBlockingOverlayShowing
             try {
                 overlayController.removeOverlay()
-                Log.d(TAG, "showBlockingOverlay: overlay removed (timeout)")
+                Log.d(TAG, "TEMP: showBlockingOverlay: overlay removed (timeout)")
             } catch (e: Exception) {
                 Log.w(TAG, "showBlockingOverlay: removeOverlay failed", e)
             }

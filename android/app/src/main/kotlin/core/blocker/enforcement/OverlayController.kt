@@ -24,6 +24,8 @@ class OverlayController(private val context: Context) {
     }
 
     fun showOverlay(message: String) {
+        Log.d(TAG, "TEMP: OverlayController.showOverlay called with message: $message, currently showing: $isOverlayShowing")
+
         if (isOverlayShowing && overlayView != null) {
             Log.d(TAG, "Overlay already showing, updating message: $message")
             updateOverlayMessage(message)
@@ -55,7 +57,7 @@ class OverlayController(private val context: Context) {
 
             windowManager?.addView(overlayView, layoutParams)
             isOverlayShowing = true
-            Log.d(TAG, "Overlay added successfully")
+            Log.d(TAG, "TEMP: Overlay added successfully")
         } catch (e: SecurityException) {
             Log.e(TAG, "SecurityException adding overlay - permission may have been revoked", e)
             isOverlayShowing = false
