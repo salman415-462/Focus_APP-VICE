@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import androidx.core.app.NotificationCompat
+import core.blocker.events.EventRepository
 import core.blocker.persistence.BlockRepository
 import core.blocker.persistence.LocalBlockStore
 import java.util.concurrent.Executors
@@ -25,7 +26,8 @@ class TimerMonitorService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        repository = BlockRepository(LocalBlockStore(applicationContext))
+        val eventRepository = EventRepository(applicationContext)
+        repository = BlockRepository(LocalBlockStore(applicationContext), eventRepository)
         executor = Executors.newSingleThreadScheduledExecutor()
         handler = Handler(Looper.getMainLooper())
 
@@ -70,13 +72,14 @@ class TimerMonitorService : Service() {
         val currentTimeMillis = System.currentTimeMillis()
 
         repository.clearExpiredBypasses(currentTimeMillis)
-        repository.clearExpiredTimers()
+        // Use clearExpiredTimersWithEvents to record TIMER_COMPLETED events
+        repository.clearExpiredTimersWithEvents()
 
         val activeTimers = repository.getActiveTimers()
-        val expiredTimers = activeTimers.filter { !it.isActive(currentTimeMillis) }
+        val expiredTimersCount = repository.clearExpiredTimers()
 
-        if (expiredTimers.isNotEmpty()) {
-            updateNotification(activeTimers.size - expiredTimers.size)
+        if (expiredTimersCount > 0) {
+            updateNotification(activeTimers.size)
         }
     }
 

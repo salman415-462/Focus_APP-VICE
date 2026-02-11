@@ -18,6 +18,7 @@ import core.blocker.engine.BlockRuleType
 import core.blocker.engine.BypassRule
 import core.blocker.enforcement.BlockAdminReceiver
 import core.blocker.enforcement.BlockAccessibilityService
+import core.blocker.events.EventRepository
 import core.blocker.persistence.BlockRepository
 import core.blocker.persistence.LocalBlockStore
 import io.flutter.plugin.common.MethodCall
@@ -28,8 +29,12 @@ import java.util.UUID
 
 class MethodChannelHandler(private val context: Context) {
 
+    private val eventRepository: EventRepository by lazy {
+        EventRepository(context)
+    }
+
     private val repository: BlockRepository by lazy {
-        BlockRepository(LocalBlockStore(context))
+        BlockRepository(LocalBlockStore(context), eventRepository)
     }
 
     private val securePinManager: SecurePinManager by lazy {
@@ -128,6 +133,30 @@ class MethodChannelHandler(private val context: Context) {
                         result.success(false)
                     } else {
                         startPomodoroBreakTimer(durationMinutes, result)
+                    }
+                }
+                "canUndoTimer" -> {
+                    val timerId = call.argument<String>("timerId")
+                    if (timerId == null) {
+                        result.success(false)
+                    } else {
+                        canUndoTimer(timerId, result)
+                    }
+                }
+                "undoTimer" -> {
+                    val timerId = call.argument<String>("timerId")
+                    if (timerId == null) {
+                        result.success(false)
+                    } else {
+                        undoTimer(timerId, result)
+                    }
+                }
+                "getRemainingGraceTime" -> {
+                    val timerId = call.argument<String>("timerId")
+                    if (timerId == null) {
+                        result.success(0)
+                    } else {
+                        getRemainingGraceTime(timerId, result)
                     }
                 }
                 "getActiveTimers" -> getActiveTimers(result)
@@ -351,7 +380,8 @@ class MethodChannelHandler(private val context: Context) {
         val currentTimeMillis = System.currentTimeMillis()
 
         repository.clearExpiredBypasses(currentTimeMillis)
-        repository.clearExpiredTimers()
+        // Use clearExpiredTimersWithEvents to record TIMER_COMPLETED events
+        repository.clearExpiredTimersWithEvents()
 
         val activeBlockRules = repository.getAllBlockRules()
         val activeBypasses = repository.getAllBypasses()
@@ -581,17 +611,18 @@ class MethodChannelHandler(private val context: Context) {
             core.blocker.engine.TimerMode.FOCUS
         }
 
-        // Create the timer
+        // Create the timer with grace window
         val timer = ActiveTimer(
             id = UUID.randomUUID().toString(),
             startTimeMillis = currentTimeMillis,
             durationMinutes = durationMinutes,
             blockedPackages = blockedPackages,
-            mode = mode
+            mode = mode,
+            graceExpiresAt = currentTimeMillis + core.blocker.engine.ActiveTimer.GRACE_WINDOW_DURATION_MILLIS
         )
 
         // Save the timer (multiple timers are allowed)
-        val saved = repository.saveActiveTimer(timer)
+        val saved = repository.saveActiveTimer(timer.withGraceWindow())
         result.success(saved)
     }
 
@@ -614,17 +645,18 @@ class MethodChannelHandler(private val context: Context) {
 
         val currentTimeMillis = System.currentTimeMillis()
 
-        // Create the timer with mode FOCUS for custom duration
+        // Create the timer with grace window for custom duration
         val timer = ActiveTimer(
             id = UUID.randomUUID().toString(),
             startTimeMillis = currentTimeMillis,
             durationMinutes = durationMinutes,
             blockedPackages = blockedPackages,
-            mode = core.blocker.engine.TimerMode.FOCUS
+            mode = core.blocker.engine.TimerMode.FOCUS,
+            graceExpiresAt = currentTimeMillis + core.blocker.engine.ActiveTimer.GRACE_WINDOW_DURATION_MILLIS
         )
 
         // Save the timer (multiple timers are allowed)
-        val saved = repository.saveActiveTimer(timer)
+        val saved = repository.saveActiveTimer(timer.withGraceWindow())
         result.success(saved)
     }
 
@@ -640,17 +672,18 @@ class MethodChannelHandler(private val context: Context) {
 
         val currentTimeMillis = System.currentTimeMillis()
 
-        // Create the timer with mode POMODORO_FOCUS and empty blocked packages
+        // Create the timer with grace window for Pomodoro Focus
         val timer = ActiveTimer(
             id = UUID.randomUUID().toString(),
             startTimeMillis = currentTimeMillis,
             durationMinutes = durationMinutes,
             blockedPackages = emptyList(),
-            mode = core.blocker.engine.TimerMode.POMODORO_FOCUS
+            mode = core.blocker.engine.TimerMode.POMODORO_FOCUS,
+            graceExpiresAt = currentTimeMillis + core.blocker.engine.ActiveTimer.GRACE_WINDOW_DURATION_MILLIS
         )
 
         // Save the timer (multiple timers are allowed)
-        val saved = repository.saveActiveTimer(timer)
+        val saved = repository.saveActiveTimer(timer.withGraceWindow())
         result.success(saved)
     }
 
@@ -666,25 +699,36 @@ class MethodChannelHandler(private val context: Context) {
 
         val currentTimeMillis = System.currentTimeMillis()
 
-        // Create the timer with mode POMODORO_BREAK and empty blocked packages
+        // Create the timer with grace window for Pomodoro Break
         val timer = ActiveTimer(
             id = UUID.randomUUID().toString(),
             startTimeMillis = currentTimeMillis,
             durationMinutes = durationMinutes,
             blockedPackages = emptyList(),
-            mode = core.blocker.engine.TimerMode.POMODORO_BREAK
+            mode = core.blocker.engine.TimerMode.POMODORO_BREAK,
+            graceExpiresAt = currentTimeMillis + core.blocker.engine.ActiveTimer.GRACE_WINDOW_DURATION_MILLIS
         )
 
         // Save the timer (multiple timers are allowed)
-        val saved = repository.saveActiveTimer(timer)
+        val saved = repository.saveActiveTimer(timer.withGraceWindow())
         result.success(saved)
+    }
+
+    private fun canUndoTimer(timerId: String, result: MethodChannel.Result) {
+        val canUndo = repository.canUndo(timerId)
+        result.success(canUndo)
+    }
+
+    private fun undoTimer(timerId: String, result: MethodChannel.Result) {
+        val undone = repository.undoTimer(timerId)
+        result.success(undone)
     }
 
     private fun getActiveTimers(result: MethodChannel.Result) {
         val currentTimeMillis = System.currentTimeMillis()
 
-        // Clear expired timers first
-        repository.clearExpiredTimers()
+        // Clear expired timers first with event recording
+        repository.clearExpiredTimersWithEvents()
 
         // Get active timers from repository
         val timers = repository.getActiveTimers()
@@ -697,11 +741,19 @@ class MethodChannelHandler(private val context: Context) {
                 "startTimeMillis" to timer.startTimeMillis,
                 "durationMinutes" to timer.durationMinutes,
                 "remainingSeconds" to timer.getRemainingSeconds(currentTimeMillis),
-                "blockedPackages" to timer.blockedPackages
+                "blockedPackages" to timer.blockedPackages,
+                "graceExpiresAt" to timer.graceExpiresAt
             )
         }
 
         result.success(timersList)
+    }
+
+    private fun getRemainingGraceTime(timerId: String, result: MethodChannel.Result) {
+        val currentTimeMillis = System.currentTimeMillis()
+        val remainingMillis = repository.getRemainingGraceMillis(timerId)
+        val remainingSeconds = (remainingMillis / 1000).toInt().coerceAtLeast(0)
+        result.success(remainingSeconds)
     }
 
     private fun openAccessibilitySettings(result: MethodChannel.Result) {

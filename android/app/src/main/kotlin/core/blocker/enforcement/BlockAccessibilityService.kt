@@ -18,6 +18,7 @@ import core.blocker.engine.BlockDecisionEngine
 import core.blocker.engine.BypassRule
 import core.blocker.engine.Decision
 import core.blocker.engine.TimerMode
+import core.blocker.events.EventRepository
 import core.blocker.persistence.BlockRepository
 import core.blocker.persistence.LocalBlockStore
 
@@ -49,7 +50,8 @@ class BlockAccessibilityService : AccessibilityService() {
     override fun onCreate() {
         super.onCreate()
         val store = LocalBlockStore(applicationContext)
-        repository = BlockRepository(store)
+        val eventRepository = EventRepository(applicationContext)
+        repository = BlockRepository(store, eventRepository)
         overlayController = OverlayController(applicationContext)
         // Improve survivability: start a foreground monitor and heartbeat logging
         ensureMonitorStarted()
@@ -69,6 +71,27 @@ class BlockAccessibilityService : AccessibilityService() {
         // DEBUG: Log event received
         Log.d(TAG, "DEBUG: Received event type=${event.eventType} package=${event.packageName}")
 
+        // CRITICAL: Clean up expired timers FIRST with event recording
+        // This ensures TIMER_COMPLETED events are recorded before any state checks
+        repository.clearExpiredTimersWithEvents()
+
+        // Get Pomodoro timer state immediately after cleanup
+        val activePomodoroTimers = repository.getActiveTimers().filter {
+            it.mode == TimerMode.POMODORO_FOCUS || it.mode == TimerMode.POMODORO_BREAK
+        }
+        val hasActivePomodoroFocus = activePomodoroTimers.any { it.mode == TimerMode.POMODORO_FOCUS }
+
+        // CRITICAL FIX: Dismiss Pomodoro overlay whenever NO focus timers exist
+        // This must be unconditional - no matter what event triggered this
+        if (!hasActivePomodoroFocus) {
+            try {
+                overlayController.removeOverlay()
+            } catch (e: Exception) {
+                Log.w(TAG, "Pomodoro: failed to remove overlay", e)
+            }
+            // Continue processing - enforcement may still be needed for Focus mode
+        }
+
         // Process only relevant events
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
             event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return
@@ -84,8 +107,8 @@ class BlockAccessibilityService : AccessibilityService() {
         Log.d(TAG, "DEBUG: onAccessibilityEvent pkg=$packageName suppressed=$blockSuppressed enforced=$hasEnforcedSinceLastHome")
 
         // Home detection: clear suppression state but track enforcement separately
-        val homePackage = getHomePackageName()
-        if (packageName == homePackage) {
+        val homePackageName = getHomePackageName()
+        if (packageName == homePackageName) {
             // When Home detected - clear suppression to allow next block attempt
             // but don't reset hasEnforcedSinceLastHome (we want to know if we've blocked)
             blockSuppressed = false
@@ -101,25 +124,18 @@ class BlockAccessibilityService : AccessibilityService() {
         }
 
         // Evaluate blocking only for app windows (non-home)
-        evaluateAndEnforce(packageName)
+        evaluateAndEnforce(packageName, event.eventType)
 
-        // Pomodoro timer overlay management (separate from blocking overlay)
-        // Do not show timer overlay while blocking suppression is active
-        val currentTimeMillis = System.currentTimeMillis()
-        val activePomodoroTimers = repository.getActiveTimers().filter {
-            it.isActive(currentTimeMillis) && (it.mode == TimerMode.POMODORO_FOCUS || it.mode == TimerMode.POMODORO_BREAK)
-        }
-        
-        // FIX: Never overwrite blocking overlay with pomodoro overlay
-        if (activePomodoroTimers.isNotEmpty() && !isBlockingOverlayShowing && !blockSuppressed) {
-            // Only show pomodoro if blocking overlay is NOT showing
-            if (!overlayController.isShowing()) {
+        // POMODORO OVERLAY: Only show when appropriate
+        // Conditions: Pomodoro focus active + non-home/non-system app + not already showing
+        // This prevents random appearance on unlock, launcher, system UI events
+        if (hasActivePomodoroFocus && 
+            packageName != homePackageName && 
+            !isSystemUiPackage(packageName)) {
+            try {
                 overlayController.showOverlay("Pomodoro Timer is running")
-            }
-        } else {
-            // Only remove pomodoro overlay if blocking overlay is not showing
-            if (!isBlockingOverlayShowing && !overlayController.isShowing()) {
-                overlayController.removeOverlay()
+            } catch (e: Exception) {
+                Log.w(TAG, "Pomodoro: failed to show overlay", e)
             }
         }
     }
@@ -140,11 +156,11 @@ class BlockAccessibilityService : AccessibilityService() {
         super.onDestroy()
     }
 
-    private fun evaluateAndEnforce(packageName: String) {
+    private fun evaluateAndEnforce(packageName: String, eventType: Int = -1) {
         val currentTimeMillis = System.currentTimeMillis()
 
         // TEMP LOG: Log all enforcement triggers
-        Log.d(TAG, "TEMP: evaluateAndEnforce called for $packageName eventType=${event?.eventType}")
+        Log.d(TAG, "TEMP: evaluateAndEnforce called for $packageName eventType=$eventType")
 
         // Rate-limit repeated enforcement for the same package
         if (packageName == lastEnforcedPackage && (currentTimeMillis - lastEnforceTimeMs) < enforcementCooldownMs) {

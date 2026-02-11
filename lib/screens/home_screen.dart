@@ -21,6 +21,11 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isAppBlockingActive = false;
   bool _isPomodoroRhythmActive = false;
 
+  // Undo-related state
+  List<Map<String, dynamic>> _undoableTimers = [];
+  Timer? _graceCountdownTimer;
+  final Map<String, int> _graceCountdown = {};
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _graceCountdownTimer?.cancel();
     super.dispose();
   }
 
@@ -109,6 +115,102 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
       _handleBypassCountdown();
+      _loadUndoStatus();
+    } catch (e) {}
+  }
+
+  Future<void> _loadUndoStatus() async {
+    if (!mounted) return;
+
+    try {
+      final undoable = <Map<String, dynamic>>[];
+      for (final timer in _activeTimers) {
+        final timerId = timer['id'] as String? ?? '';
+        if (timerId.isEmpty) continue;
+
+        final canUndo = await MethodChannelService.canUndoTimer(timerId);
+        if (!mounted) return;
+
+        if (canUndo) {
+          final remainingGrace =
+              await MethodChannelService.getRemainingGraceTime(timerId);
+          if (!mounted) return;
+
+          undoable.add({
+            ...timer,
+            'remainingGraceSeconds': remainingGrace,
+          });
+        }
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _undoableTimers = undoable;
+      });
+
+      _startGraceCountdown();
+    } catch (e) {}
+  }
+
+  void _startGraceCountdown() {
+    _graceCountdownTimer?.cancel();
+    _graceCountdownTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _tickGraceCountdown(),
+    );
+  }
+
+  void _tickGraceCountdown() {
+    if (!mounted) return;
+
+    final updatedCountdown = <String, int>{};
+    final stillUndoable = <Map<String, dynamic>>[];
+
+    for (final timer in _undoableTimers) {
+      final timerId = timer['id'] as String? ?? '';
+      final currentRemaining = timer['remainingGraceSeconds'] as int? ?? 0;
+
+      if (currentRemaining > 0) {
+        updatedCountdown[timerId] = currentRemaining - 1;
+        stillUndoable.add({
+          ...timer,
+          'remainingGraceSeconds': currentRemaining - 1,
+        });
+      }
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _graceCountdown.clear();
+      _graceCountdown.addAll(updatedCountdown);
+      _undoableTimers = stillUndoable;
+    });
+
+    if (_undoableTimers.isEmpty) {
+      _graceCountdownTimer?.cancel();
+    }
+  }
+
+  Future<void> _handleUndo(String timerId) async {
+    if (!mounted) return;
+
+    try {
+      final success = await MethodChannelService.undoTimer(timerId);
+      if (!mounted) return;
+
+      if (success) {
+        // Remove from undoable list
+        setState(() {
+          _undoableTimers =
+              _undoableTimers.where((t) => t['id'] != timerId).toList();
+          _graceCountdown.remove(timerId);
+        });
+
+        // Reload active timers to reflect the removal
+        await _loadActiveTimers();
+      }
     } catch (e) {}
   }
 
@@ -658,6 +760,108 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildUndoTimerCard({
+    required String timerId,
+    required String mode,
+    required int remainingGraceSeconds,
+    List<String> blockedPackages = const [],
+  }) {
+    final modeLabel = _getModeLabel(mode);
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Color(0xFFFFFDF2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Color(0xFFD4B89B).withOpacity(0.5),
+          width: 1,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: Color(0xFFD4A574),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  modeLabel,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF9E9E92),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                if (blockedPackages.isNotEmpty) ...[
+                  Text(
+                    'Blocking ${blockedPackages.length} app${blockedPackages.length > 1 ? 's' : ''}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF7A7A70),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          TextButton(
+            onPressed: () => _handleUndo(timerId),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              backgroundColor: Color(0xFFF5F2E8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Cancel',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF8B6B6B),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Color(0xFFE8D0CC),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: Text(
+                      remainingGraceSeconds.toString(),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Color(0xFF8B6B6B),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final sortedTimers = _getHeroAndSecondaryTimers();
@@ -808,7 +1012,30 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         )),
                                   ],
-                                  const SizedBox(height: 28),
+                                  if (_undoableTimers.isNotEmpty) ...[
+                                    const SizedBox(height: 12),
+                                    ..._undoableTimers.map((timer) => Padding(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 8),
+                                          child: _buildUndoTimerCard(
+                                            timerId:
+                                                timer['id'] as String? ?? '',
+                                            mode: timer['mode'] as String? ??
+                                                'FOCUS',
+                                            remainingGraceSeconds:
+                                                timer['remainingGraceSeconds']
+                                                        as int? ??
+                                                    0,
+                                            blockedPackages:
+                                                (timer['blockedPackages']
+                                                            as List?)
+                                                        ?.map(
+                                                            (e) => e.toString())
+                                                        .toList() ??
+                                                    [],
+                                          ),
+                                        )),
+                                  ],
                                   _isBypassActive
                                       ? _buildEmergencyBypassActive()
                                       : _buildEmergencyBypassAvailable(),

@@ -152,12 +152,19 @@ class LocalBlockStore(private val context: Context) {
             } catch (e: IllegalArgumentException) {
                 TimerMode.FOCUS
             }
+            // Parse graceExpiresAt with backward compatibility - null if missing
+            val graceExpiresAt = if (timerObj.has("graceExpiresAt") && !timerObj.isNull("graceExpiresAt")) {
+                timerObj.getLong("graceExpiresAt")
+            } else {
+                null
+            }
             ActiveTimer(
                 id = timerObj.getString("id"),
                 startTimeMillis = timerObj.getLong("startTimeMillis"),
                 durationMinutes = timerObj.getInt("durationMinutes"),
                 blockedPackages = packages,
-                mode = mode
+                mode = mode,
+                graceExpiresAt = graceExpiresAt
             )
         }
     }
@@ -169,6 +176,8 @@ class LocalBlockStore(private val context: Context) {
         timerObj.put("durationMinutes", timer.durationMinutes)
         timerObj.put("blockedPackages", JSONArray(timer.blockedPackages))
         timerObj.put("mode", timer.mode.name)
+        // Persist graceExpiresAt - can be null (grace expired or backward compatibility)
+        timerObj.put("graceExpiresAt", timer.graceExpiresAt)
         return timerObj
     }
 

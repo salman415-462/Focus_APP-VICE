@@ -229,6 +229,37 @@ class MethodChannelService {
     }
   }
 
+  /// Check if a timer can still be undone within its grace window
+  /// Returns true if undo is allowed, false otherwise (expired, not found, or already undone)
+  static Future<bool> canUndoTimer(String timerId) async {
+    try {
+      final result = await _channel.invokeMethod<bool>('canUndoTimer', {
+        'timerId': timerId,
+      });
+      return result ?? false;
+    } on PlatformException catch (_) {
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Remove a timer if it is still within its grace window
+  /// This is a one-time operation - once grace expires, undo is permanently blocked
+  /// Returns true if the timer was successfully removed, false if grace has expired
+  static Future<bool> undoTimer(String timerId) async {
+    try {
+      final result = await _channel.invokeMethod<bool>('undoTimer', {
+        'timerId': timerId,
+      });
+      return result ?? false;
+    } on PlatformException catch (_) {
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Get active timer sessions from native
   /// Returns list of active timer info with remaining time from native
   static Future<List<Map<String, dynamic>>> getActiveTimers() async {
@@ -250,12 +281,28 @@ class MethodChannelService {
                   ?.map((e) => e.toString())
                   .toList() ??
               <String>[],
+          'graceExpiresAt': map['graceExpiresAt'] as int? ?? 0,
         };
       }).toList();
     } on PlatformException catch (_) {
       return [];
     } catch (_) {
       return [];
+    }
+  }
+
+  /// Get the remaining grace time in seconds for a timer
+  /// Returns remaining seconds (0 if grace has expired or timer not found)
+  static Future<int> getRemainingGraceTime(String timerId) async {
+    try {
+      final result = await _channel.invokeMethod<int>('getRemainingGraceTime', {
+        'timerId': timerId,
+      });
+      return result ?? 0;
+    } on PlatformException catch (_) {
+      return 0;
+    } catch (_) {
+      return 0;
     }
   }
 
