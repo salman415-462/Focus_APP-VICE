@@ -14,6 +14,10 @@ import core.blocker.events.TimerEvent
  * 
  * All calculations are based on epoch millis for reliable boundary handling.
  * Interval merging ensures no double-counting of overlapping blocked periods.
+ * 
+ * IMPORTANT: Sessions are aggregated by COMPLETION TIME (endTimeMillis).
+ * A timer that starts Sunday 23:00 and completes Monday 01:00 counts for Monday's week.
+ * This ensures definite outcome is known before attribution.
  */
 class StatsRepository(
     private val eventRepository: EventRepository

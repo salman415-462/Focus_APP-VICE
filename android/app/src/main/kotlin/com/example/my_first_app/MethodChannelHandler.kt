@@ -21,6 +21,10 @@ import core.blocker.enforcement.BlockAccessibilityService
 import core.blocker.events.EventRepository
 import core.blocker.persistence.BlockRepository
 import core.blocker.persistence.LocalBlockStore
+import core.blocker.stats.AppBlockStat
+import core.blocker.stats.MonthlyStats
+import core.blocker.stats.StatsRepository
+import core.blocker.stats.WeeklyStats
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import org.json.JSONArray
@@ -39,6 +43,10 @@ class MethodChannelHandler(private val context: Context) {
 
     private val securePinManager: SecurePinManager by lazy {
         SecurePinManager(context)
+    }
+
+    private val statsRepository: StatsRepository by lazy {
+        StatsRepository(eventRepository)
     }
 
     private val excludedPackages: Set<String> by lazy {
@@ -185,6 +193,31 @@ class MethodChannelHandler(private val context: Context) {
                         result.success(false)
                     } else {
                         verifyBypassPin(pin, result)
+                    }
+                }
+                "getWeeklyStats" -> {
+                    val weekStartMillis = call.argument<Long>("weekStartMillis")
+                    if (weekStartMillis == null) {
+                        result.success(null)
+                    } else {
+                        getWeeklyStats(weekStartMillis, result)
+                    }
+                }
+                "getMonthlyStats" -> {
+                    val monthStartMillis = call.argument<Long>("monthStartMillis")
+                    if (monthStartMillis == null) {
+                        result.success(null)
+                    } else {
+                        getMonthlyStats(monthStartMillis, result)
+                    }
+                }
+                "getPerAppBlockStats" -> {
+                    val startMillis = call.argument<Long>("startMillis")
+                    val endMillis = call.argument<Long>("endMillis")
+                    if (startMillis == null || endMillis == null) {
+                        result.success(null)
+                    } else {
+                        getPerAppBlockStats(startMillis, endMillis, result)
                     }
                 }
                 else -> result.notImplemented()
@@ -812,6 +845,94 @@ class MethodChannelHandler(private val context: Context) {
     private fun verifyBypassPin(pin: String, result: MethodChannel.Result) {
         val isValid = securePinManager.verifyPin(pin)
         result.success(isValid)
+    }
+
+    // ==================== Stats Methods ====================
+
+    /**
+     * Get weekly statistics for a specific week.
+     * 
+     * @param weekStartMillis Epoch millis for the start of the week
+     * @param result MethodChannel result to return stats map
+     */
+    private fun getWeeklyStats(weekStartMillis: Long, result: MethodChannel.Result) {
+        try {
+            val weeklyStats = statsRepository.getWeeklyStats(weekStartMillis)
+            
+            val statsMap = mapOf(
+                "totalCompletedSessions" to weeklyStats.totalCompletedSessions,
+                "totalCancelledSessions" to weeklyStats.totalCancelledSessions,
+                "totalSystemKillSessions" to weeklyStats.totalSystemKillSessions,
+                "totalSessions" to weeklyStats.totalSessions,
+                "totalFocusMinutes" to weeklyStats.totalFocusMinutes,
+                "totalBypassUsedSessions" to weeklyStats.totalBypassUsedSessions
+            )
+            
+            result.success(statsMap)
+        } catch (e: Exception) {
+            Log.e("MethodChannelHandler", "getWeeklyStats error: ${e.message}", e)
+            result.error("STATS_ERROR", "Failed to get weekly stats: ${e.message}", null)
+        }
+    }
+
+    /**
+     * Get monthly statistics with weekly breakdown.
+     * 
+     * @param monthStartMillis Epoch millis for any day in the target month
+     * @param result MethodChannel result to return stats map
+     */
+    private fun getMonthlyStats(monthStartMillis: Long, result: MethodChannel.Result) {
+        try {
+            val monthlyStats = statsRepository.getMonthlyStats(monthStartMillis)
+            
+            val weeklyBreakdown = monthlyStats.weeklyBreakdown.map { week ->
+                mapOf(
+                    "totalCompletedSessions" to week.totalCompletedSessions,
+                    "totalCancelledSessions" to week.totalCancelledSessions,
+                    "totalSystemKillSessions" to week.totalSystemKillSessions,
+                    "totalSessions" to week.totalSessions,
+                    "totalFocusMinutes" to week.totalFocusMinutes,
+                    "totalBypassUsedSessions" to week.totalBypassUsedSessions
+                )
+            }
+            
+            val statsMap = mapOf(
+                "totalCompletedSessions" to monthlyStats.totalCompletedSessions,
+                "totalFocusMinutes" to monthlyStats.totalFocusMinutes,
+                "totalBypassUsedSessions" to monthlyStats.totalBypassUsedSessions,
+                "weeklyBreakdown" to weeklyBreakdown
+            )
+            
+            result.success(statsMap)
+        } catch (e: Exception) {
+            Log.e("MethodChannelHandler", "getMonthlyStats error: ${e.message}", e)
+            result.error("STATS_ERROR", "Failed to get monthly stats: ${e.message}", null)
+        }
+    }
+
+    /**
+     * Get per-app blocked duration statistics with interval merging.
+     * 
+     * @param startMillis Start of the range (inclusive)
+     * @param endMillis End of the range (exclusive)
+     * @param result MethodChannel result to return app block stats list
+     */
+    private fun getPerAppBlockStats(startMillis: Long, endMillis: Long, result: MethodChannel.Result) {
+        try {
+            val appBlockStats = statsRepository.getPerAppBlockStats(startMillis, endMillis)
+            
+            val statsList = appBlockStats.map { appStat ->
+                mapOf(
+                    "packageName" to appStat.packageName,
+                    "totalBlockedMinutes" to appStat.totalBlockedMinutes
+                )
+            }
+            
+            result.success(statsList)
+        } catch (e: Exception) {
+            Log.e("MethodChannelHandler", "getPerAppBlockStats error: ${e.message}", e)
+            result.error("STATS_ERROR", "Failed to get per-app stats: ${e.message}", null)
+        }
     }
 }
 
