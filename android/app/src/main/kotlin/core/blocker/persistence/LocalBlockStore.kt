@@ -158,13 +158,16 @@ class LocalBlockStore(private val context: Context) {
             } else {
                 null
             }
+            // Parse wasBypassed with backward compatibility - default to false if missing
+            val wasBypassed = timerObj.optBoolean("wasBypassed", false)
             ActiveTimer(
                 id = timerObj.getString("id"),
                 startTimeMillis = timerObj.getLong("startTimeMillis"),
                 durationMinutes = timerObj.getInt("durationMinutes"),
                 blockedPackages = packages,
                 mode = mode,
-                graceExpiresAt = graceExpiresAt
+                graceExpiresAt = graceExpiresAt,
+                wasBypassed = wasBypassed
             )
         }
     }
@@ -178,6 +181,8 @@ class LocalBlockStore(private val context: Context) {
         timerObj.put("mode", timer.mode.name)
         // Persist graceExpiresAt - can be null (grace expired or backward compatibility)
         timerObj.put("graceExpiresAt", timer.graceExpiresAt)
+        // Persist wasBypassed flag for accurate completion type classification
+        timerObj.put("wasBypassed", timer.wasBypassed)
         return timerObj
     }
 

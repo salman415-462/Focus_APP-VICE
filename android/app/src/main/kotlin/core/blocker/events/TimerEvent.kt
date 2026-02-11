@@ -22,7 +22,10 @@ sealed class TimerEvent {
     ) : TimerEvent()
 
     /**
-     * Event recorded when a timer ends (naturally, via undo, bypass, or system kill).
+     * Event recorded when a timer ends (naturally, via undo, or system kill).
+     * 
+     * @param completionType The final outcome of the timer session
+     * @param bypassUsed Whether an emergency bypass was used during this session
      */
     data class TimerCompleted(
         override val timerId: String,
@@ -32,12 +35,14 @@ sealed class TimerEvent {
         val actualDurationMinutes: Int,
         val mode: String,
         val blockedPackages: List<String>,
-        val completionType: CompletionType
+        val completionType: CompletionType,
+        val bypassUsed: Boolean
     ) : TimerEvent()
 }
 
 /**
- * How a timer reached completion state.
+ * How a timer reached completion state - represents the final outcome only.
+ * Bypass behavior is tracked separately via bypassUsed flag.
  */
 enum class CompletionType {
     /**
@@ -49,11 +54,6 @@ enum class CompletionType {
      * User cancelled via undo within grace window.
      */
     UNDO,
-
-    /**
-     * Emergency bypass was used, interrupting the timer.
-     */
-    BYPASS,
 
     /**
      * App was killed or system interrupted before natural completion.

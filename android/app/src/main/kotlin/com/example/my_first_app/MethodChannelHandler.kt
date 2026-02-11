@@ -201,7 +201,8 @@ class MethodChannelHandler(private val context: Context) {
         val currentTimeMillis = System.currentTimeMillis()
         val activeBlockRules = repository.getAllBlockRules()
         val activeBypasses = repository.getAllBypasses()
-        val bypasses = repository.clearExpiredBypasses(currentTimeMillis)
+        // Note: clearExpiredBypasses() is intentionally NOT called here to avoid race conditions
+        // Expired bypasses are cleaned up only by TimerMonitorService
 
         val accessibilityEnabled = isAccessibilityServiceEnabled()
         Log.d("MethodChannelHandler", "Accessibility enabled: $accessibilityEnabled")
@@ -379,9 +380,9 @@ class MethodChannelHandler(private val context: Context) {
     private fun getBlockStatus(result: MethodChannel.Result) {
         val currentTimeMillis = System.currentTimeMillis()
 
-        repository.clearExpiredBypasses(currentTimeMillis)
-        // Use clearExpiredTimersWithEvents to record TIMER_COMPLETED events
-        repository.clearExpiredTimersWithEvents()
+        // Note: clearExpiredBypasses() and clearExpiredTimersWithEvents() are intentionally
+        // NOT called here to avoid race conditions. Cleanup is performed only by
+        // TimerMonitorService to ensure exactly one TIMER_COMPLETED event per timer.
 
         val activeBlockRules = repository.getAllBlockRules()
         val activeBypasses = repository.getAllBypasses()
@@ -573,10 +574,13 @@ class MethodChannelHandler(private val context: Context) {
             }
         }
 
-        // Pause each timer for the bypass duration
+        // Pause each timer for the bypass duration and mark as bypassed
         timersToPause.forEach { timer ->
-            timer.pausedUntilMillis = currentTimeMillis + BYPASS_DURATION_MILLIS
-            repository.updateActiveTimer(timer)
+            val bypassedTimer = timer.copy(
+                pausedUntilMillis = currentTimeMillis + BYPASS_DURATION_MILLIS,
+                wasBypassed = true
+            )
+            repository.updateActiveTimer(bypassedTimer)
         }
 
         if (timersToPause.isNotEmpty()) {
@@ -725,12 +729,11 @@ class MethodChannelHandler(private val context: Context) {
     }
 
     private fun getActiveTimers(result: MethodChannel.Result) {
-        val currentTimeMillis = System.currentTimeMillis()
+        // Note: clearExpiredTimersWithEvents() is intentionally NOT called here
+        // to avoid race conditions. Cleanup is performed only by TimerMonitorService
+        // to ensure exactly one TIMER_COMPLETED event per timer.
 
-        // Clear expired timers first with event recording
-        repository.clearExpiredTimersWithEvents()
-
-        // Get active timers from repository
+        // Get active timers from repository (getActiveTimers() already filters expired timers)
         val timers = repository.getActiveTimers()
 
         // Convert to map for Flutter

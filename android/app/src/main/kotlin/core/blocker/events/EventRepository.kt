@@ -49,6 +49,11 @@ class EventRepository(private val context: Context) {
     /**
      * Record a TIMER_COMPLETED event.
      * Called during expiration cleanup to ensure no missed completions.
+     * 
+     * Idempotency: If a TIMER_COMPLETED event already exists for this timerId,
+     * this method returns early without recording a duplicate.
+     * 
+     * @param bypassUsed Whether an emergency bypass was used during this timer session
      */
     fun recordTimerCompleted(
         timerId: String,
@@ -57,8 +62,14 @@ class EventRepository(private val context: Context) {
         actualDurationMinutes: Int,
         mode: String,
         blockedPackages: List<String>,
-        completionType: CompletionType
+        completionType: CompletionType,
+        bypassUsed: Boolean
     ) {
+        // Idempotency guard: check if completion event already exists
+        if (hasTimerCompletedEvent(timerId)) {
+            return
+        }
+
         val event = TimerEvent.TimerCompleted(
             timerId = timerId,
             timestampMillis = endTimeMillis,
@@ -67,9 +78,45 @@ class EventRepository(private val context: Context) {
             actualDurationMinutes = actualDurationMinutes,
             mode = mode,
             blockedPackages = blockedPackages,
-            completionType = completionType
+            completionType = completionType,
+            bypassUsed = bypassUsed
         )
         appendEvent(event)
+    }
+
+    /**
+     * Check if a TIMER_COMPLETED event already exists for the given timerId.
+     * Used for idempotency checks to prevent duplicate events.
+     * 
+     * @param timerId The timer ID to check
+     * @return true if a completion event already exists, false otherwise
+     */
+    fun hasTimerCompletedEvent(timerId: String): Boolean {
+        return lock.withLock {
+            if (!eventsFile.exists()) return@withLock false
+
+            try {
+                val json = JSONObject(eventsFile.readText())
+                val eventsArray = json.getJSONArray("events")
+
+                for (i in 0 until eventsArray.length()) {
+                    val eventObj = eventsArray.getJSONObject(i)
+                    val type = eventObj.optString("type", "")
+                    
+                    // Only check TIMER_COMPLETED events
+                    if (type == "TIMER_COMPLETED") {
+                        val existingTimerId = eventObj.optString("timerId", "")
+                        if (existingTimerId == timerId) {
+                            return@withLock true
+                        }
+                    }
+                }
+
+                false
+            } catch (e: Exception) {
+                false
+            }
+        }
     }
 
     /**
@@ -227,6 +274,7 @@ class EventRepository(private val context: Context) {
                     put("mode", event.mode)
                     put("blockedPackages", JSONArray(event.blockedPackages))
                     put("completionType", event.completionType.name)
+                    put("bypassUsed", event.bypassUsed)
                 }
             }
         }
@@ -247,6 +295,9 @@ class EventRepository(private val context: Context) {
                 )
             }
             "TIMER_COMPLETED" -> {
+                // Parse bypassUsed with backward compatibility (default to false for old events)
+                val bypassUsed = obj.optBoolean("bypassUsed", false)
+                
                 TimerEvent.TimerCompleted(
                     timerId = obj.getString("timerId"),
                     timestampMillis = obj.getLong("timestampMillis"),
@@ -255,7 +306,8 @@ class EventRepository(private val context: Context) {
                     actualDurationMinutes = obj.getInt("actualDurationMinutes"),
                     mode = obj.getString("mode"),
                     blockedPackages = parseStringList(obj.getJSONArray("blockedPackages")),
-                    completionType = CompletionType.valueOf(obj.getString("completionType"))
+                    completionType = CompletionType.valueOf(obj.getString("completionType")),
+                    bypassUsed = bypassUsed
                 )
             }
             else -> throw IllegalArgumentException("Unknown event type: $type")

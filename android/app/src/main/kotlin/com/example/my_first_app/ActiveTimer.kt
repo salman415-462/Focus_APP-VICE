@@ -14,7 +14,10 @@ data class ActiveTimer(
     val mode: TimerMode = TimerMode.FOCUS,
     var pausedUntilMillis: Long? = null,
     // Grace window for undo - null means grace period has expired or was already used
-    val graceExpiresAt: Long? = null
+    val graceExpiresAt: Long? = null,
+    // Flag to track if bypass was used during this timer
+    // Used for accurate completion type classification
+    val wasBypassed: Boolean = false
 ) {
     companion object {
         const val GRACE_WINDOW_DURATION_MILLIS = 30_000L // 30 seconds

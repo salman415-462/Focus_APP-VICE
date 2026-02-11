@@ -71,9 +71,9 @@ class BlockAccessibilityService : AccessibilityService() {
         // DEBUG: Log event received
         Log.d(TAG, "DEBUG: Received event type=${event.eventType} package=${event.packageName}")
 
-        // CRITICAL: Clean up expired timers FIRST with event recording
-        // This ensures TIMER_COMPLETED events are recorded before any state checks
-        repository.clearExpiredTimersWithEvents()
+        // CRITICAL FIX: Removed clearExpiredTimersWithEvents() call from here
+        // Timer expiration is now handled exclusively by TimerMonitorService
+        // to prevent duplicate TIMER_COMPLETED events from race conditions
 
         // Get Pomodoro timer state immediately after cleanup
         val activePomodoroTimers = repository.getActiveTimers().filter {

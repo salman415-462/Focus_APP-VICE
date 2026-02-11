@@ -130,7 +130,8 @@ class BlockRepository(
                 actualDurationMinutes = actualDuration,
                 mode = timer.mode.name,
                 blockedPackages = timer.blockedPackages,
-                completionType = completionType
+                completionType = completionType,
+                bypassUsed = timer.wasBypassed
             )
         }
         
@@ -140,8 +141,9 @@ class BlockRepository(
         }
         
         pausedExpiredTimers.forEach { timer ->
-            // Paused timers that expired during pause - record as interrupted
-            val completionType = CompletionType.BYPASS // Paused by bypass = interrupted
+            // Timers that expired during bypass pause
+            // completionType = NATURAL (final outcome), bypassUsed = true (behavior)
+            val completionType = CompletionType.NATURAL
             val pausedEndTime = timer.pausedUntilMillis ?: timer.endTimeMillis
             val actualDuration = ((pausedEndTime - timer.startTimeMillis) / (60 * 1000)).toInt()
             
@@ -152,7 +154,8 @@ class BlockRepository(
                 actualDurationMinutes = actualDuration,
                 mode = timer.mode.name,
                 blockedPackages = timer.blockedPackages,
-                completionType = completionType
+                completionType = completionType,
+                bypassUsed = true // bypass was used during this session
             )
         }
         
@@ -167,37 +170,19 @@ class BlockRepository(
 
     /**
      * Determines the completion type for a timer based on its state.
+     * CompletionType represents the final outcome only - bypass behavior is tracked separately via bypassUsed flag.
      */
     private fun determineCompletionType(timer: ActiveTimer, currentTimeMillis: Long): CompletionType {
         return when {
-            // If currently paused (by bypass), treat as bypass interruption
-            timer.isPaused(currentTimeMillis) -> CompletionType.BYPASS
+            // If currently paused (by bypass), completion is still NATURAL
+            // bypassUsed flag tracks that bypass occurred
+            timer.isPaused(currentTimeMillis) -> CompletionType.NATURAL
+            // Use the wasBypassed flag for bypassUsed field, not completionType
+            timer.wasBypassed -> CompletionType.NATURAL
             // If within grace window and user undoes, it will be caught by undoTimer()
             // Here we just check if grace has expired
-            timer.graceExpiresAt != null && currentTimeMillis > timer.graceExpiresAt -> {
-                // Grace expired - timer ran naturally or was bypassed
-                // Check if bypass was active during this timer
-                if (hasActiveBypassDuringTimer(timer)) {
-                    CompletionType.BYPASS
-                } else {
-                    CompletionType.NATURAL
-                }
-            }
+            timer.graceExpiresAt != null && currentTimeMillis > timer.graceExpiresAt -> CompletionType.NATURAL
             else -> CompletionType.NATURAL
-        }
-    }
-
-    /**
-     * Check if any bypass was active during the timer period.
-     */
-    private fun hasActiveBypassDuringTimer(timer: ActiveTimer): Boolean {
-        val data = store.readData()
-        val bypasses = data.bypasses
-        
-        // Check if any bypass overlaps with timer period
-        return bypasses.any { bypass ->
-            bypass.isActive(timer.startTimeMillis) ||
-            bypass.isActive(timer.endTimeMillis)
         }
     }
 
@@ -216,11 +201,6 @@ class BlockRepository(
             }
             CompletionType.UNDO -> {
                 // Timer was cancelled - calculate time until undo
-                val elapsed = ((currentTimeMillis - timer.startTimeMillis) / (60 * 1000)).toInt()
-                elapsed.coerceAtMost(timer.durationMinutes)
-            }
-            CompletionType.BYPASS -> {
-                // Timer was interrupted by bypass
                 val elapsed = ((currentTimeMillis - timer.startTimeMillis) / (60 * 1000)).toInt()
                 elapsed.coerceAtMost(timer.durationMinutes)
             }
@@ -299,7 +279,8 @@ class BlockRepository(
             actualDurationMinutes = elapsedMinutes.coerceAtMost(timer.durationMinutes),
             mode = timer.mode.name,
             blockedPackages = timer.blockedPackages,
-            completionType = CompletionType.UNDO
+            completionType = CompletionType.UNDO,
+            bypassUsed = timer.wasBypassed
         )
 
         // Remove the timer
